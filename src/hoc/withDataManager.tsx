@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { DataManager } from '../services/DataManager';
 import { DataManagerContext } from '../services/DataManagerProvider';
 
-interface WithDataManagerProps {
+export interface WithDataManagerProps {
   dataManager: DataManager;
 }
 
