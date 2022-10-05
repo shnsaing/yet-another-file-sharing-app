@@ -1,15 +1,14 @@
 import React, { FC } from 'react';
-import Footer from './components/Footer';
-import Navbar from './components/Navbar';
-import Routing from './Routing';
+import { Route, Switch } from 'wouter';
+import HomePage from './components/Home';
+import LoginPage from './components/Login';
 
 const App: FC = () => {
   return (
-    <>
-      <Navbar />
-      <Routing />
-      <Footer />
-    </>
+    <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route path="/" component={HomePage} />
+    </Switch>
   );
 };
 
