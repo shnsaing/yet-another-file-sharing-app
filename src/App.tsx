@@ -1,8 +1,16 @@
 import React, { FC } from 'react';
-import { Typography } from 'antd';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
+import Routing from './Routing';
 
-const { Title } = Typography;
-
-const App: FC = () => <Title>Hello world</Title>;
+const App: FC = () => {
+  return (
+    <>
+      <Navbar />
+      <Routing />
+      <Footer />
+    </>
+  );
+};
 
 export default App;
