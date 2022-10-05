@@ -17,11 +17,7 @@ const withDataManager = <P extends WithDataManagerProps>(
   ) => {
     const { dataManager } = useContext(DataManagerContext);
 
-    return (
-      <div>
-        <WrappedComponent {...(props as P)} dataManager={dataManager} />
-      </div>
-    );
+    return <WrappedComponent {...(props as P)} dataManager={dataManager} />;
   };
 
   ComponentWithDataManager.displayName = `withDataManager(${displayName})`;
