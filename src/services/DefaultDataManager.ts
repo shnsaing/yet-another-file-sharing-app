@@ -7,16 +7,20 @@ export class DefaultDataManager implements DataManager {
     this.baseUrl = baseUrl;
   }
 
-  async login(username: string, password: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/auth`, {
+  async login(email: string, password: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/authentication_token`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
-    const data = await response.json();
-    console.log(data.token);
+    if (response.ok) {
+      const data = await response.json();
+      return data.token;
+    } else {
+      throw new Error();
+    }
   }
 }

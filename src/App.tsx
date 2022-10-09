@@ -7,6 +7,7 @@ const App: FC = () => {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/forgot-password" component={() => <div>forgotpass</div>} />
       <Route path="/" component={HomePage} />
     </Switch>
   );

@@ -1,3 +1,3 @@
 export interface DataManager {
-  login(username: string, password: string): Promise<any>;
+  login(email: string, password: string): Promise<any>;
 }

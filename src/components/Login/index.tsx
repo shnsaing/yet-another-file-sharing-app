@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from 'react';
-import { Button, Form, Input, Row } from 'antd';
-import { useLocation } from 'wouter';
+import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
+import { useLocation, Link } from 'wouter';
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
@@ -10,6 +10,7 @@ import './style.less';
 const LoginPage: FC = ({ dataManager }: WithDataManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useLocation();
+  const [form] = Form.useForm();
 
   useEffect(() => {
     if (sessionStorage.getItem('token')) {
@@ -19,37 +20,60 @@ const LoginPage: FC = ({ dataManager }: WithDataManagerProps) => {
 
   const onFinish = async (values: any) => {
     setLoading(true);
-    const token = await dataManager.login(values.username, values.password);
-    sessionStorage.setItem('token', token);
-    setLoading(false);
-    setLocation('/');
+    try {
+      const token = await dataManager.login(values.email, values.password);
+      sessionStorage.setItem('token', token);
+      setLocation('/');
+    } catch (_) {
+      form.resetFields();
+      notification.error({
+        message: 'Erreur',
+        description:
+          "Votre compte n'a pas été retrouvé. Veuillez vérifier les informations et réessayer.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateMessages = {
+    required: 'Veuillez renseigner votre ${name} !',
+    types: {
+      email: 'Veuillez renseigner un email valide !',
+    },
   };
 
   return (
     <div className="login-view-container">
-      <Form onFinish={onFinish}>
-        <Form.Item
-          name="username"
-          rules={[{ required: true, message: 'Please input your username!' }]}
+      <Card>
+        <Form
+          form={form}
+          onFinish={onFinish}
+          validateMessages={validateMessages}
         >
-          <Input placeholder="Username" />
-        </Form.Item>
-
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: 'Please input your password!' }]}
-        >
-          <Input.Password placeholder="Password" />
-        </Form.Item>
-
-        <Row justify="center">
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              Submit
-            </Button>
+          <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
+            <Input placeholder="Email" />
           </Form.Item>
-        </Row>
-      </Form>
+
+          <Form.Item
+            name="password"
+            messageVariables={{ name: 'mot de passe' }}
+            rules={[{ required: true }]}
+          >
+            <Input.Password placeholder="Mot de passe" />
+          </Form.Item>
+
+          <Row justify="center">
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Se connecter
+            </Button>
+            <Divider />
+            <Link href="/forgot-password" className="active">
+              Mot de passe oublié ?
+            </Link>
+          </Row>
+        </Form>
+      </Card>
     </div>
   );
 };
