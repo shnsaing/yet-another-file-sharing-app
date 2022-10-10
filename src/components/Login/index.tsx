@@ -18,7 +18,6 @@ const LoginPage: FC = ({
   const [location, setLocation] = useLocation();
   const [form] = Form.useForm();
 
-  console.log(t('test'));
   useEffect(() => {
     if (sessionStorage.getItem('token')) {
       setLocation('/');
@@ -34,9 +33,8 @@ const LoginPage: FC = ({
     } catch (_) {
       form.resetFields();
       notification.error({
-        message: 'Erreur',
-        description:
-          "Votre compte n'a pas été retrouvé. Veuillez vérifier les informations et réessayer.",
+        message: t('error'),
+        description: t('login.errorMessage'),
       });
     } finally {
       setLoading(false);
@@ -44,9 +42,9 @@ const LoginPage: FC = ({
   };
 
   const validateMessages = {
-    required: 'Veuillez renseigner votre ${name} !',
+    required: t('login.invalidInput', { input: '${name}' }),
     types: {
-      email: 'Veuillez renseigner un email valide !',
+      email: t('email.invalidMessage'),
     },
   };
 
@@ -59,24 +57,24 @@ const LoginPage: FC = ({
           validateMessages={validateMessages}
         >
           <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
-            <Input placeholder="Email" />
+            <Input placeholder={t('email.label')} />
           </Form.Item>
 
           <Form.Item
             name="password"
-            messageVariables={{ name: 'mot de passe' }}
+            messageVariables={{ name: t('password').toLowerCase() }}
             rules={[{ required: true }]}
           >
-            <Input.Password placeholder="Mot de passe" />
+            <Input.Password placeholder={t('password')} />
           </Form.Item>
 
           <Row justify="center">
             <Button type="primary" htmlType="submit" loading={loading}>
-              Se connecter
+              {t('login.submit')}
             </Button>
             <Divider />
             <Link href="/forgot-password" className="active">
-              Mot de passe oublié ?
+              {t('forgotPassword')}
             </Link>
           </Row>
         </Form>
