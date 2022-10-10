@@ -1,17 +1,63 @@
-import React, { FC, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { Card, Table } from 'antd';
+import { ColumnsType } from 'antd/lib/table';
+import React, { FC, useEffect, useState } from 'react';
+import { useLocation, useRoute } from 'wouter';
+import withDataManager, {
+  WithDataManagerProps,
+} from '../../hoc/withDataManager';
 import withDefaultLayout from '../../hoc/withDefaultLayout';
 
-const HomePage: FC = () => {
+interface FolderType {
+  key: React.Key;
+  name: string;
+  createdAt: Date;
+  type: string;
+}
+
+const HomePage: FC<WithDataManagerProps> = ({ dataManager }) => {
   const [location, setLocation] = useLocation();
+  const [match, params] = useRoute('/:code');
+
+  const [folders, setFolders] = useState<FolderType[]>([]);
+
+  const fetchFolders = async (code: string) => {
+    const folders = await dataManager.getFolders(code);
+    return setFolders(folders);
+  };
 
   useEffect(() => {
-    if (!sessionStorage.getItem('token')) {
-      setLocation('/login');
+    const code = (params as any).code;
+    if (code) {
+      fetchFolders(code).catch(console.error);
     }
   }, []);
 
-  return <>Home</>;
+  const columns: ColumnsType<FolderType> = [
+    {
+      title: 'Nom',
+      dataIndex: 'name',
+    },
+    {
+      title: 'Créé le',
+      dataIndex: 'createdAt',
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+    },
+    {
+      title: 'QR Code',
+    },
+    {},
+  ];
+
+  return (
+    <>
+      <Card>
+        <Table columns={columns} dataSource={folders} />
+      </Card>
+    </>
+  );
 };
 
-export default withDefaultLayout(HomePage);
+export default withDataManager(withDefaultLayout(HomePage));

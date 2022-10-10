@@ -23,4 +23,8 @@ export class DefaultDataManager implements DataManager {
       throw new Error();
     }
   }
+
+  async getFolders(operationToken: string): Promise<any> {
+    // TODO: Implement
+  }
 }
