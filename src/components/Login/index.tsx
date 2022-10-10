@@ -1,17 +1,24 @@
 import React, { FC, useEffect, useState } from 'react';
 import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
+import { WithTranslation } from 'react-i18next';
 import { useLocation, Link } from 'wouter';
+
+import withTranslation from '../../hoc/withTranslation';
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 
 import './style.less';
 
-const LoginPage: FC = ({ dataManager }: WithDataManagerProps) => {
+const LoginPage: FC = ({
+  dataManager,
+  t,
+}: WithTranslation & WithDataManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useLocation();
   const [form] = Form.useForm();
 
+  console.log(t('test'));
   useEffect(() => {
     if (sessionStorage.getItem('token')) {
       setLocation('/');
@@ -78,4 +85,4 @@ const LoginPage: FC = ({ dataManager }: WithDataManagerProps) => {
   );
 };
 
-export default withDataManager(LoginPage);
+export default withTranslation(withDataManager(LoginPage));
