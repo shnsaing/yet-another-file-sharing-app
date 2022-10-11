@@ -12,4 +12,7 @@ export default {
   },
   password: 'Mot de passe',
   forgotPassword: 'Mot de passe oublié ?',
+  type: {
+    folder: 'Dossier de fichiers',
+  },
 };
