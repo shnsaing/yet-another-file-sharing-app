@@ -3,14 +3,13 @@ import { FolderOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import React, { FC } from 'react';
 import { WithTranslation } from 'react-i18next';
-import { useLocation, useRoute } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
-import withDefaultLayout from '../../hoc/withDefaultLayout';
 import withTranslation from '../../hoc/withTranslation';
+import { useParams } from 'react-router-dom';
 
 interface FolderType {
   key: React.Key;
@@ -23,11 +22,10 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   dataManager,
   t,
 }) => {
-  const [location, setLocation] = useLocation();
-  const [match, params] = useRoute('/:operationToken');
+  const params = useParams();
 
   const getFolders = async () => {
-    const operationToken = (params as any).operationToken;
+    const operationToken = params.operationToken;
     if (operationToken) {
       const folders = await dataManager.getFolders(operationToken);
       return folders.map((folder: FolderType, i: number) => {
@@ -87,4 +85,4 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   );
 };
 
-export default withTranslation(withDataManager(withDefaultLayout(FoldersPage)));
+export default withTranslation(withDataManager(FoldersPage));
