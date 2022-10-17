@@ -1,5 +1,7 @@
 const path = require('path');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+const WorkboxPlugin = require('workbox-webpack-plugin');
 
 module.exports = {
   entry: './src/index.tsx',
@@ -58,6 +60,18 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: path.resolve(__dirname, 'public/index.html'),
       filename: 'index.html',
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: './public/favicon.ico', to: '' },
+        { from: './public/logo192.png', to: '' },
+        { from: './public/logo512.png', to: '' },
+        { from: './public/manifest.json', to: '' },
+      ],
+    }),
+    new WorkboxPlugin.GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true,
     }),
   ],
   devServer: {
