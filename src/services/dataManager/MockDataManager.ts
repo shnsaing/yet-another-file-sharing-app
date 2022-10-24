@@ -15,4 +15,8 @@ export class MockDataManager implements DataManager {
       },
     ];
   }
+
+  async getFolder(operationToken: string, folderId: string): Promise<any> {
+    // TODO implement
+  }
 }

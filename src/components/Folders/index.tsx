@@ -1,5 +1,5 @@
 import { Table, Tag } from 'antd';
-import { FolderOutlined } from '@ant-design/icons';
+import { FolderOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import React, { FC, useEffect } from 'react';
 import { WithTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 interface FolderType {
   key: React.Key;
@@ -33,21 +33,44 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const params = useParams();
 
+  const showQrCode = (id: string) => {};
+
   const getFolders = async () => {
     const operationToken = params.operationToken;
+    const folderId = params.folderId;
+    console.log(params);
     if (operationToken) {
-      const folders = await dataManager.getFolders(
-        operationToken,
-        sessionStorage.getItem('token')
-      );
-      return folders.map((folder: FolderType, i: number) => {
+      let data;
+      if (folderId) {
+        const folder = await dataManager.getFolder(operationToken, folderId);
+        data = folder.subfolders;
+      } else {
+        data = await dataManager.getFolders(
+          operationToken,
+          sessionStorage.getItem('token')
+        );
+      }
+      console.log(data);
+      return data.map((folder: FolderType, i: number) => {
         return Object.assign({ key: i }, folder);
       });
     }
-    throw new Error('No operationToken provided');
+    throw new Error('No operationToken of id provided');
   };
 
-  const folders = useQuery(['folders'], getFolders);
+  const {
+    data: folders,
+    isFetching,
+    status,
+    error,
+    refetch,
+  } = useQuery(['folders'], getFolders);
+
+  let location = useLocation();
+
+  useEffect(() => {
+    refetch();
+  }, [location]);
 
   const columns: ColumnsType<FolderType> = [
     {
@@ -56,7 +79,10 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
       dataIndex: 'name',
       render: (value, record) => (
         <span>
-          <FolderOutlined /> <Link to={`folder/${record.id}`}>{value}</Link>
+          <FolderOutlined />{' '}
+          <Link to={`/${params.operationToken}/folder/${record.id}`}>
+            {value}
+          </Link>
         </span>
       ),
     },
@@ -80,6 +106,9 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     {
       key: 'qrcode',
       title: 'QR Code',
+      render: (value, record) => (
+        <QrcodeOutlined onClick={() => showQrCode(record.id)} />
+      ),
     },
     {
       key: 'actions',
@@ -90,7 +119,7 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     <>
       <Table
         columns={columns}
-        dataSource={folders.data}
+        dataSource={folders}
         scroll={{ x: '100vw', y: '300' }}
       />
     </>

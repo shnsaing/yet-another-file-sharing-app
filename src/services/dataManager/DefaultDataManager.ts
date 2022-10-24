@@ -55,4 +55,23 @@ export class DefaultDataManager implements DataManager {
       throw new Error();
     }
   }
+
+  async getFolder(operationToken: string, folderId: string): Promise<any> {
+    const response = await fetch(
+      `${this.baseUrl}/api/${operationToken}/folders/${folderId}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          // Authorization: `Bearer ${sessionToken}`,
+        },
+      }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error();
+    }
+  }
 }

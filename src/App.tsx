@@ -24,6 +24,10 @@ const router = createBrowserRouter([
         path: ':operationToken',
         element: <FoldersPage />,
       },
+      {
+        path: ':operationToken/folder/:folderId',
+        element: <FoldersPage />,
+      },
     ],
   },
   {
