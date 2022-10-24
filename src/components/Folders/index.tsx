@@ -1,7 +1,7 @@
 import { Table, Tag } from 'antd';
 import { FolderOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
@@ -9,10 +9,11 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 interface FolderType {
   key: React.Key;
+  id: string;
   name: string;
   createdAt: Date;
   type: string;
@@ -22,12 +23,23 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   dataManager,
   t,
 }) => {
+  // const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   if (sessionStorage.getItem('token')) {
+  //     navigate('/');
+  //   }
+  // }, []);
+
   const params = useParams();
 
   const getFolders = async () => {
     const operationToken = params.operationToken;
     if (operationToken) {
-      const folders = await dataManager.getFolders(operationToken);
+      const folders = await dataManager.getFolders(
+        operationToken,
+        sessionStorage.getItem('token')
+      );
       return folders.map((folder: FolderType, i: number) => {
         return Object.assign({ key: i }, folder);
       });
@@ -42,28 +54,28 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
       key: 'name',
       title: 'Nom',
       dataIndex: 'name',
-      render: (value, record, index) => {
-        return (
-          <>
-            <FolderOutlined /> {value}
-          </>
-        );
-      },
+      render: (value, record) => (
+        <span>
+          <FolderOutlined /> <Link to={`folder/${record.id}`}>{value}</Link>
+        </span>
+      ),
     },
     {
       key: 'createdAt',
       title: 'Créé le',
       dataIndex: 'createdAt',
       responsive: ['md'],
+      render: (value) =>
+        new Intl.DateTimeFormat('fr', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+        }).format(new Date(value)),
     },
     {
       key: 'type',
       title: 'Type',
-      dataIndex: 'type',
       responsive: ['md'],
-      render: (value) => {
-        return <Tag>{t(`type.${value}`)}</Tag>;
-      },
+      render: () => <Tag>{t(`type.folder`)}</Tag>,
     },
     {
       key: 'qrcode',

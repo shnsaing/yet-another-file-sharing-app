@@ -15,8 +15,8 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-const dataManager = new MockDataManager();
-// const dataManager = new DefaultDataManager('https://kiken-qr.com');
+// const dataManager = new MockDataManager();
+const dataManager = new DefaultDataManager('https://kiken-qr.com');
 
 const queryClient = new QueryClient();
 
