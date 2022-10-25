@@ -49,11 +49,9 @@ export class DefaultDataManager implements DataManager {
       }
     );
     if (response.ok) {
-      const data = await response.json();
-      return data;
-    } else {
-      throw new Error();
+      return await response.json();
     }
+    throw new Error(response.statusText);
   }
 
   async getFolder(operationToken: string, folderId: string): Promise<any> {
@@ -68,10 +66,8 @@ export class DefaultDataManager implements DataManager {
       }
     );
     if (response.ok) {
-      const data = await response.json();
-      return data;
-    } else {
-      throw new Error();
+      return await response.json();
     }
+    throw new Error(response.statusText);
   }
 }

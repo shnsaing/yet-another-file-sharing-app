@@ -15,4 +15,7 @@ export default {
   type: {
     folder: 'directory',
   },
+  modal: {
+    close: 'Close',
+  },
 };

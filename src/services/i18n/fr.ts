@@ -15,4 +15,7 @@ export default {
   type: {
     folder: 'Dossier de fichiers',
   },
+  modal: {
+    close: 'Fermer',
+  },
 };

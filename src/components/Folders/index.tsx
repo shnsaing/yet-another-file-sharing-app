@@ -1,9 +1,10 @@
-import { Table, Tag } from 'antd';
+import { Modal, Table, Tag } from 'antd';
 import { FolderOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { QRCodeSVG } from 'qrcode.react';
 
 import withDataManager, {
   WithDataManagerProps,
@@ -32,39 +33,52 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   // }, []);
 
   const params = useParams();
+  const operationToken = params.operationToken;
+  const folderId = params.folderId;
 
-  const showQrCode = (id: string) => {};
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [qrCode, setQrCode] = useState('');
+
+  const showQrCode = (id: string) => {
+    setIsModalOpen(true);
+    setQrCode(`${window.location.origin}/${operationToken}/folder/${id}`);
+  };
 
   const getFolders = async () => {
-    const operationToken = params.operationToken;
-    const folderId = params.folderId;
-    console.log(params);
-    if (operationToken) {
-      let data;
-      if (folderId) {
-        const folder = await dataManager.getFolder(operationToken, folderId);
-        data = folder.subfolders;
-      } else {
-        data = await dataManager.getFolders(
-          operationToken,
-          sessionStorage.getItem('token')
-        );
+    try {
+      if (operationToken) {
+        let data;
+        if (folderId) {
+          const folder = await dataManager.getFolder(operationToken, folderId);
+          data = folder.subfolders;
+        } else {
+          data = await dataManager.getFolders(
+            operationToken,
+            sessionStorage.getItem('token')
+          );
+        }
+        console.log('data', data);
+        return data.map((folder: FolderType, i: number) => {
+          return Object.assign({ key: i }, folder);
+        });
       }
-      console.log(data);
-      return data.map((folder: FolderType, i: number) => {
-        return Object.assign({ key: i }, folder);
-      });
+      throw new Error('No operationToken of id provided');
+    } catch (error) {
+      console.error(error);
+      return [];
     }
-    throw new Error('No operationToken of id provided');
   };
 
   const {
     data: folders,
     isFetching,
-    status,
-    error,
     refetch,
-  } = useQuery(['folders'], getFolders);
+  } = useQuery(['folders'], getFolders, {
+    onError: (e) => {
+      console.log('test');
+      console.error(e);
+    },
+  });
 
   let location = useLocation();
 
@@ -80,9 +94,7 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
       render: (value, record) => (
         <span>
           <FolderOutlined />{' '}
-          <Link to={`/${params.operationToken}/folder/${record.id}`}>
-            {value}
-          </Link>
+          <Link to={`/${operationToken}/folder/${record.id}`}>{value}</Link>
         </span>
       ),
     },
@@ -121,7 +133,18 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
         columns={columns}
         dataSource={folders}
         scroll={{ x: '100vw', y: '300' }}
+        loading={isFetching}
       />
+      <Modal
+        centered
+        open={isModalOpen}
+        onOk={() => setIsModalOpen(false)}
+        okText="Ok"
+        onCancel={() => setIsModalOpen(false)}
+        cancelText={t('modal.close')}
+      >
+        <QRCodeSVG value={qrCode} />
+      </Modal>
     </>
   );
 };
