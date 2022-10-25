@@ -132,7 +132,7 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
       <Table
         columns={columns}
         dataSource={folders}
-        scroll={{ x: '100vw', y: '300' }}
+        scroll={{ x: '100%' }}
         loading={isFetching}
       />
       <Modal
