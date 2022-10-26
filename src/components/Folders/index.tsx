@@ -24,14 +24,6 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   dataManager,
   t,
 }) => {
-  // const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (sessionStorage.getItem('token')) {
-  //     navigate('/');
-  //   }
-  // }, []);
-
   const params = useParams();
   const operationToken = params.operationToken;
   const folderId = params.folderId;
@@ -47,18 +39,13 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   const getFolders = async () => {
     try {
       if (operationToken) {
-        let data;
+        let folder;
         if (folderId) {
-          const folder = await dataManager.getFolder(operationToken, folderId);
-          data = folder.subfolders;
+          folder = await dataManager.getFolder(operationToken, folderId);
         } else {
-          data = await dataManager.getFolders(
-            operationToken,
-            sessionStorage.getItem('token')
-          );
+          folder = (await dataManager.getRootFolder(operationToken))[0];
         }
-        console.log('data', data);
-        return data.map((folder: FolderType, i: number) => {
+        return folder.subfolders.map((folder: FolderType, i: number) => {
           return Object.assign({ key: i }, folder);
         });
       }

@@ -1,5 +1,27 @@
 import { DataManager } from './DataManager';
 
+class HeadersFactory {
+  private static buildDefaultHeaders = () => {
+    const headers = new Headers();
+    headers.set('Accept', 'application/json');
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  };
+
+  static buildGetHeaders = () => {
+    return HeadersFactory.buildDefaultHeaders();
+  };
+
+  static buildPostHeaders = () => {
+    const headers = HeadersFactory.buildDefaultHeaders();
+    headers.set('Content-Type', 'application/json');
+    return headers;
+  };
+}
+
 export class DefaultDataManager implements DataManager {
   private readonly baseUrl;
 
@@ -20,10 +42,7 @@ export class DefaultDataManager implements DataManager {
   async login(email: string, password: string): Promise<any> {
     const response = await fetch(`${this.baseUrl}/authentication_token`, {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: HeadersFactory.buildPostHeaders(),
       body: JSON.stringify({ email, password }),
     });
     if (response.ok) {
@@ -34,7 +53,7 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  async getFolders(operationToken: string, sessionToken: string): Promise<any> {
+  async getRootFolder(operationToken: string): Promise<any[]> {
     const response = await fetch(
       this.getUrlWithQueryParams(
         `${this.baseUrl}/api/${operationToken}/folders`,
@@ -42,10 +61,7 @@ export class DefaultDataManager implements DataManager {
       ),
       {
         method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          // Authorization: `Bearer ${sessionToken}`,
-        },
+        headers: HeadersFactory.buildGetHeaders(),
       }
     );
     if (response.ok) {
@@ -59,10 +75,7 @@ export class DefaultDataManager implements DataManager {
       `${this.baseUrl}/api/${operationToken}/folders/${folderId}`,
       {
         method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          // Authorization: `Bearer ${sessionToken}`,
-        },
+        headers: HeadersFactory.buildGetHeaders(),
       }
     );
     if (response.ok) {
