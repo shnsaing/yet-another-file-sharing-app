@@ -1,10 +1,17 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
-import { Link } from 'react-router-dom';
+import { Button, Layout, Menu } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
 
 const { Header } = Layout;
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const logout = () => {
+    sessionStorage.removeItem('token');
+    navigate(0); // refresh the page
+  };
+
   return (
     <Header>
       <div className="logo" />
@@ -21,6 +28,7 @@ const Navbar = () => {
         })}
       /> */}
       <Link to="/login">login</Link>
+      <Button onClick={logout}>logout</Button>
     </Header>
   );
 };
