@@ -12,4 +12,10 @@ export default {
   },
   password: 'Password',
   forgotPassword: 'Forgot password?',
+  type: {
+    folder: 'directory',
+  },
+  modal: {
+    close: 'Close',
+  },
 };

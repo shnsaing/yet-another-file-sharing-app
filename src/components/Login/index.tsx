@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react';
 import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
 import { WithTranslation } from 'react-i18next';
-import { useLocation, Link } from 'wouter';
+import { Link, useNavigate } from 'react-router-dom';
 
 import withTranslation from '../../hoc/withTranslation';
 import withDataManager, {
@@ -15,12 +15,12 @@ const LoginPage: FC = ({
   t,
 }: WithTranslation & WithDataManagerProps) => {
   const [loading, setLoading] = useState(false);
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
 
   useEffect(() => {
     if (sessionStorage.getItem('token')) {
-      setLocation('/');
+      navigate('/');
     }
   }, []);
 
@@ -29,7 +29,7 @@ const LoginPage: FC = ({
     try {
       const token = await dataManager.login(values.email, values.password);
       sessionStorage.setItem('token', token);
-      setLocation('/');
+      navigate(-1);
     } catch (_) {
       form.resetFields();
       notification.error({
@@ -73,7 +73,7 @@ const LoginPage: FC = ({
               {t('login.submit')}
             </Button>
             <Divider />
-            <Link href="/forgot-password" className="active">
+            <Link to="/forgot-password" className="active">
               {t('forgotPassword')}
             </Link>
           </Row>

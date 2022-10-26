@@ -1,17 +1,16 @@
-import React, { FC, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import withDefaultLayout from '../../hoc/withDefaultLayout';
+import { Button } from 'antd';
+import React, { FC } from 'react';
+import { Link } from 'react-router-dom';
 
 const HomePage: FC = () => {
-  const [location, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!sessionStorage.getItem('token')) {
-      setLocation('/login');
-    }
-  }, []);
-
-  return <>Home</>;
+  return (
+    <>
+      Bienvenue sur Kiken.
+      <Button>
+        <Link to="/login">Se connecter</Link>
+      </Button>
+    </>
+  );
 };
 
-export default withDefaultLayout(HomePage);
+export default HomePage;
