@@ -1,10 +1,25 @@
 import React, { FC } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from 'react-router-dom';
 
 import FoldersPage from './components/Folders';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
+
+type ProtectedRouteProps = {
+  children?: React.ReactNode;
+};
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element => {
+  if (!sessionStorage.getItem('token')) {
+    return <Navigate to="/" replace={true} />;
+  }
+  return <React.Fragment>{children}</React.Fragment>;
+};
 
 const router = createBrowserRouter([
   {
@@ -27,6 +42,40 @@ const router = createBrowserRouter([
       {
         path: ':operationToken/folder/:folderId',
         element: <FoldersPage />,
+      },
+    ],
+  },
+  {
+    path: 'admin',
+    element: (
+      <ProtectedRoute>
+        <DefaultLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: 'users',
+        element: <div />,
+      },
+      {
+        path: 'user/:id',
+        element: <div />,
+      },
+      {
+        path: 'operations',
+        element: <div />,
+      },
+      {
+        path: 'operation/id',
+        element: <div />,
+      },
+      {
+        path: 'clients',
+        element: <div />,
+      },
+      {
+        path: 'client/:id',
+        element: <div />,
       },
     ],
   },
