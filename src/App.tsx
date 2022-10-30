@@ -4,21 +4,34 @@ import {
   Navigate,
   RouterProvider,
 } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 
 import FilesPage from './components/Files';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
+import { Role } from './services/auth/auth';
 
 type ProtectedRouteProps = {
+  rolesAllowed: Role[];
   children?: React.ReactNode;
 };
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element => {
-  if (!sessionStorage.getItem('token')) {
-    return <Navigate to="/" replace={true} />;
+const ProtectedRoute = ({
+  rolesAllowed,
+  children,
+}: ProtectedRouteProps): JSX.Element => {
+  const token = sessionStorage.getItem('token');
+  if (token) {
+    const decoded: any = jwt_decode(token);
+    const role = decoded.roles.find(
+      (role: Role) => rolesAllowed.indexOf(role) > 0
+    );
+    if (role) {
+      return <React.Fragment>{children}</React.Fragment>;
+    }
   }
-  return <React.Fragment>{children}</React.Fragment>;
+  return <Navigate to="/" replace={true} />;
 };
 
 const router = createBrowserRouter([
@@ -47,36 +60,56 @@ const router = createBrowserRouter([
   },
   {
     path: 'admin',
-    element: (
-      <ProtectedRoute>
-        <DefaultLayout />
-      </ProtectedRoute>
-    ),
+    element: <DefaultLayout />,
     children: [
       {
         path: 'users',
-        element: <div />,
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+            <div />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'user/:id',
-        element: <div />,
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+            <div />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'operations',
-        element: <div />,
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.CLIENT, Role.ADMIN]}>
+            <div />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'operation/id',
-        element: <div />,
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.CLIENT, Role.ADMIN]}>
+            <div />
+          </ProtectedRoute>
+        ),
       },
-      {
-        path: 'clients',
-        element: <div />,
-      },
-      {
-        path: 'client/:id',
-        element: <div />,
-      },
+      // {
+      //   path: 'clients',
+      //   element: (
+      //     <ProtectedRoute rolesAllowed={[Role.USER, Role.CLIENT, Role.ADMIN]}>
+      //       <div />
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: 'client/:id',
+      //   element: (
+      //     <ProtectedRoute rolesAllowed={[Role.USER, Role.CLIENT, Role.ADMIN]}>
+      //       <div />
+      //     </ProtectedRoute>
+      //   ),
+      // },
     ],
   },
   {
