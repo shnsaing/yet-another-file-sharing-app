@@ -1,5 +1,10 @@
 import { Modal, Table, Tag } from 'antd';
-import { FolderOutlined, QrcodeOutlined } from '@ant-design/icons';
+import {
+  FileImageOutlined,
+  FileOutlined,
+  FolderOutlined,
+  QrcodeOutlined,
+} from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import React, { FC, useEffect, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
@@ -12,15 +17,23 @@ import withDataManager, {
 import withTranslation from '../../hoc/withTranslation';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-interface FolderType {
+enum Type {
+  folder = 'folder',
+  file = 'file',
+  png = 'png',
+}
+
+interface FileType {
   key: React.Key;
   id: string;
   name: string;
   createdAt: Date;
-  type: string;
+  path: string;
+  type: Type;
+  extension?: string;
 }
 
-const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
+const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   dataManager,
   t,
 }) => {
@@ -36,6 +49,11 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     setQrCode(`${window.location.origin}/${operationToken}/folder/${id}`);
   };
 
+  const getExtension = (path: string) => {
+    const split = path.split('.');
+    return split[split.length - 1];
+  };
+
   const getFolders = async () => {
     try {
       if (operationToken) {
@@ -45,9 +63,21 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
         } else {
           folder = (await dataManager.getRootFolder(operationToken))[0];
         }
-        return folder.subfolders.map((folder: FolderType, i: number) => {
-          return Object.assign({ key: i }, folder);
+        const folders = folder.subfolders.map((folder: FileType, i: number) => {
+          const path = `/${operationToken}/folder/${folder.id}`;
+          return Object.assign(folder, { key: i, type: Type.folder, path });
         });
+        const files = folder.mediaObjects.map((file: FileType, i: number) => {
+          const type =
+            Type[
+              (file.extension
+                ? file.extension.toLowerCase()
+                : getExtension(file.path)) as keyof typeof Type
+            ] || Type.file;
+          const path = `/media_objects/${file.path}`;
+          return Object.assign(file, { key: i, name: file.path, type, path });
+        });
+        return folders.concat(files);
       }
       throw new Error('No operationToken of id provided');
     } catch (error) {
@@ -62,7 +92,6 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     refetch,
   } = useQuery(['folders'], getFolders, {
     onError: (e) => {
-      console.log('test');
       console.error(e);
     },
   });
@@ -73,15 +102,31 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     refetch();
   }, [location]);
 
-  const columns: ColumnsType<FolderType> = [
+  const getFileIcon = (type: Type) => {
+    switch (type) {
+      case Type.folder:
+        return <FolderOutlined />;
+      case Type.file:
+        return <FileImageOutlined />;
+      default:
+        return <FileOutlined />;
+    }
+  };
+
+  const getNameComponent = (record: FileType) => {
+    if (record.type === Type.folder) {
+      return <Link to={record.path}>{record.name}</Link>;
+    }
+    return <a onClick={() => {}}>{record.name}</a>;
+  };
+
+  const columns: ColumnsType<FileType> = [
     {
       key: 'name',
       title: 'Nom',
-      dataIndex: 'name',
       render: (value, record) => (
         <span>
-          <FolderOutlined />{' '}
-          <Link to={`/${operationToken}/folder/${record.id}`}>{value}</Link>
+          {getFileIcon(record.type)} {getNameComponent(record)}
         </span>
       ),
     },
@@ -99,8 +144,9 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
     {
       key: 'type',
       title: 'Type',
+      dataIndex: 'type',
       responsive: ['md'],
-      render: () => <Tag>{t(`type.folder`)}</Tag>,
+      render: (value) => <Tag>{t(`type.${value}`, value)}</Tag>,
     },
     {
       key: 'qrcode',
@@ -136,4 +182,4 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
   );
 };
 
-export default withTranslation(withDataManager(FoldersPage));
+export default withTranslation(withDataManager(FilesPage));

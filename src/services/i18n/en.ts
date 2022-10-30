@@ -13,7 +13,8 @@ export default {
   password: 'Password',
   forgotPassword: 'Forgot password?',
   type: {
-    folder: 'directory',
+    folder: 'Directory',
+    file: 'File',
   },
   modal: {
     close: 'Close',

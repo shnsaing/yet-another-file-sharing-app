@@ -14,6 +14,7 @@ export default {
   forgotPassword: 'Mot de passe oublié ?',
   type: {
     folder: 'Dossier de fichiers',
+    file: 'Fichier',
   },
   modal: {
     close: 'Fermer',

@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import FoldersPage from './components/Folders';
+import FilesPage from './components/Files';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
@@ -22,11 +22,11 @@ const router = createBrowserRouter([
       },
       {
         path: ':operationToken',
-        element: <FoldersPage />,
+        element: <FilesPage />,
       },
       {
         path: ':operationToken/folder/:folderId',
-        element: <FoldersPage />,
+        element: <FilesPage />,
       },
     ],
   },
