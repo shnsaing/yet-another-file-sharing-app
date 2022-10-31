@@ -18,4 +18,8 @@ export default {
   modal: {
     close: 'Close',
   },
+  menu: {
+    login: 'Login',
+    logout: 'Logout',
+  },
 };

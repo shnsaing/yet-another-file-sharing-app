@@ -10,7 +10,7 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 interface FolderType {
   key: React.Key;
@@ -121,6 +121,8 @@ const FoldersPage: FC<WithTranslation & WithDataManagerProps> = ({
         dataSource={folders}
         scroll={{ x: '100%' }}
         loading={isFetching}
+        pagination={{ pageSize: 7 }}
+        size="middle"
       />
       <Modal
         centered
