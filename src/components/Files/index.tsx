@@ -1,4 +1,4 @@
-import { Modal, Table, Tag } from 'antd';
+import { Modal, Table, Tag, Tooltip } from 'antd';
 import {
   FileImageOutlined,
   FileOutlined,
@@ -124,10 +124,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     {
       key: 'name',
       title: 'Nom',
+      ellipsis: {
+        showTitle: false,
+      },
       render: (value, record) => (
-        <span>
+        <Tooltip placement="bottomLeft" title={record.name}>
           {getFileIcon(record.type)} {getNameComponent(record)}
-        </span>
+        </Tooltip>
       ),
     },
     {
@@ -149,14 +152,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       render: (value) => <Tag>{t(`type.${value}`, value)}</Tag>,
     },
     {
-      key: 'qrcode',
-      title: 'QR Code',
+      key: 'actions',
+      title: 'Actions',
+      align: 'center',
       render: (value, record) => (
         <QrcodeOutlined onClick={() => showQrCode(record.id)} />
       ),
-    },
-    {
-      key: 'actions',
     },
   ];
 
@@ -178,6 +179,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         okText="Ok"
         onCancel={() => setIsModalOpen(false)}
         cancelText={t('modal.close')}
+        bodyStyle={{ display: 'flex', justifyContent: 'center' }}
       >
         <QRCodeSVG value={qrCode} />
       </Modal>

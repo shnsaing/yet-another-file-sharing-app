@@ -3,9 +3,11 @@
 
   .content-wrapper {
     padding: 0 50px;
+    height: calc(100% - 64px - 70px);
 
     .content {
-      min-height: 100%;
+      overflow: auto;
+      height: calc(100% - 32px);
       padding: 24px;
       background: #fff;
       margin-top: 32px;
