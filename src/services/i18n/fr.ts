@@ -19,4 +19,8 @@ export default {
   modal: {
     close: 'Fermer',
   },
+  menu: {
+    login: 'Se connecter',
+    logout: 'Se déconnecter',
+  },
 };
