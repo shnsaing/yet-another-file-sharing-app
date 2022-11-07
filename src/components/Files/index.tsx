@@ -167,7 +167,8 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         dataSource={folders}
         scroll={{ x: '100%' }}
         loading={isFetching}
-        pagination={{ pageSize: 7 }}
+        pagination={{ pageSize: 7, hideOnSinglePage: true }}
+        locale={{ emptyText: t('nodata') }}
         size="middle"
       />
       <Modal

@@ -23,4 +23,5 @@ export default {
     login: 'Login',
     logout: 'Logout',
   },
+  nodata: 'No data',
 };
