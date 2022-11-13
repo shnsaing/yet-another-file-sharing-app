@@ -24,4 +24,11 @@ export default {
     logout: 'Se déconnecter',
   },
   nodata: 'Pas de données',
+  file: {
+    upload: 'Téléverser un fichier',
+  },
+  folder: {
+    new: 'Nouveau dossier',
+  },
+  new: 'Nouveau',
 };

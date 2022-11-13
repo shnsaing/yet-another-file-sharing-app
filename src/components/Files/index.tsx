@@ -1,21 +1,29 @@
-import { Modal, Table, Tag, Tooltip } from 'antd';
+import { Button, Dropdown, Modal, Table, Tag, Tooltip, Upload } from 'antd';
+import type { MenuProps } from 'antd';
 import {
+  DeleteOutlined,
+  EditOutlined,
   FileImageOutlined,
   FileOutlined,
+  FolderAddOutlined,
   FolderOutlined,
+  PlusOutlined,
   QrcodeOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import React, { FC, useEffect, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { Link, useLocation, useParams } from 'react-router-dom';
+
+import './style.less';
 
 enum Type {
   folder = 'folder',
@@ -38,11 +46,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   t,
 }) => {
   const params = useParams();
-  const operationToken = params.operationToken;
+  const operationToken = params.operationToken as string;
   const folderId = params.folderId;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [qrCode, setQrCode] = useState('');
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [file, setFile] = useState<string | null>(null);
 
   const showQrCode = (id: string) => {
     setIsModalOpen(true);
@@ -56,30 +65,28 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const getFolders = async () => {
     try {
-      if (operationToken) {
-        let folder;
-        if (folderId) {
-          folder = await dataManager.getFolder(operationToken, folderId);
-        } else {
-          folder = (await dataManager.getRootFolder(operationToken))[0];
-        }
-        const folders = folder.subfolders.map((folder: FileType, i: number) => {
-          const path = `/${operationToken}/folder/${folder.id}`;
-          return Object.assign(folder, { key: i, type: Type.folder, path });
-        });
-        const files = folder.mediaObjects.map((file: FileType, i: number) => {
-          const type =
-            Type[
-              (file.extension
-                ? file.extension.toLowerCase()
-                : getExtension(file.path)) as keyof typeof Type
-            ] || Type.file;
-          const path = `/media_objects/${file.path}`;
-          return Object.assign(file, { key: i, name: file.path, type, path });
-        });
-        return folders.concat(files);
+      let folder;
+      if (folderId) {
+        folder = await dataManager.getFolder(operationToken, folderId);
+      } else {
+        folder = (await dataManager.getRootFolder(operationToken))[0];
       }
-      throw new Error('No operationToken of id provided');
+      let i = 1;
+      const folders = folder.subfolders.map((folder: FileType) => {
+        const path = `/${operationToken}/folder/${folder.id}`;
+        return Object.assign(folder, { key: i++, type: Type.folder, path });
+      });
+      const files = folder.mediaObjects.map((file: FileType) => {
+        const type =
+          Type[
+            (file.extension
+              ? file.extension.toLowerCase()
+              : getExtension(file.path)) as keyof typeof Type
+          ] || Type.file;
+        const path = `/media_objects/${file.path}`;
+        return Object.assign(file, { key: i++, name: file.path, type, path });
+      });
+      return folders.concat(files);
     } catch (error) {
       console.error(error);
       return [];
@@ -113,11 +120,15 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     }
   };
 
+  const onFilenameClick = (file: FileType) => {
+    dataManager.downloadFile(operationToken, file.name);
+  };
+
   const getNameComponent = (record: FileType) => {
     if (record.type === Type.folder) {
       return <Link to={record.path}>{record.name}</Link>;
     }
-    return <a onClick={() => {}}>{record.name}</a>;
+    return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
   };
 
   const columns: ColumnsType<FileType> = [
@@ -156,34 +167,87 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       title: 'Actions',
       align: 'center',
       render: (value, record) => (
-        <QrcodeOutlined onClick={() => showQrCode(record.id)} />
+        <>
+          <QrcodeOutlined onClick={() => showQrCode(record.id)} />
+          <EditOutlined className="edit" />
+          <DeleteOutlined className="delete" />
+        </>
       ),
     },
   ];
 
+  const hideModal = () => {
+    setIsModalOpen(false);
+    setQrCode(null);
+    setFile(null);
+  };
+
+  const fileUpload = (options: any) => {
+    console.log(options);
+    const data = new FormData();
+    data.set('operationID', operationToken);
+    data.set('file', options.file, options.file.name);
+    dataManager.uploadFile(data);
+  };
+
+  const items: MenuProps['items'] = [
+    {
+      label: (
+        <Upload showUploadList={false} customRequest={fileUpload} directory>
+          <FolderAddOutlined /> {t('folder.new')}
+        </Upload>
+      ),
+      key: 'folder',
+    },
+    { type: 'divider' },
+    {
+      label: (
+        <Upload showUploadList={false} customRequest={fileUpload}>
+          <UploadOutlined /> {t('file.upload')}
+        </Upload>
+      ),
+      key: 'file',
+    },
+  ];
+
   return (
-    <>
+    <div className="files-container">
+      <Dropdown
+        className="actions-container"
+        menu={{ items }}
+        trigger={['click', 'hover']}
+      >
+        <Button size="small" icon={<PlusOutlined />}>
+          {t('new')}
+        </Button>
+      </Dropdown>
       <Table
+        style={{ paddingTop: folders && folders.length > 7 ? 0 : 56 }}
         columns={columns}
         dataSource={folders}
         scroll={{ x: '100%' }}
         loading={isFetching}
-        pagination={{ pageSize: 7, hideOnSinglePage: true }}
+        pagination={{
+          pageSize: 7,
+          hideOnSinglePage: true,
+          position: ['topRight', 'bottomRight'],
+        }}
         locale={{ emptyText: t('nodata') }}
         size="middle"
       />
       <Modal
         centered
         open={isModalOpen}
-        onOk={() => setIsModalOpen(false)}
+        onOk={hideModal}
         okText="Ok"
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={hideModal}
         cancelText={t('modal.close')}
         bodyStyle={{ display: 'flex', justifyContent: 'center' }}
       >
-        <QRCodeSVG value={qrCode} />
+        {qrCode && <QRCodeSVG value={qrCode} />}
+        {file && <img />}
       </Modal>
-    </>
+    </div>
   );
 };
 

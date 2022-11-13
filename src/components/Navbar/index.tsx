@@ -21,10 +21,19 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
 
   const getMenu = () => {
     const menu: React.ReactElement[] = [];
+    let key = 1;
     if (sessionStorage.getItem('token')) {
-      menu.push(<a onClick={() => logout()}>{t('menu.logout')}</a>);
+      menu.push(
+        <a key={key++} onClick={() => logout()}>
+          {t('menu.logout')}
+        </a>
+      );
     } else {
-      menu.push(<Link to="/login">{t('menu.login')}</Link>);
+      menu.push(
+        <Link key={key++} to="/login">
+          {t('menu.login')}
+        </Link>
+      );
     }
     return menu;
   };

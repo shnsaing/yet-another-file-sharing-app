@@ -1,9 +1,8 @@
 import { DataManager } from './DataManager';
 
 class HeadersFactory {
-  private static buildDefaultHeaders = () => {
+  private static buildHeaders = () => {
     const headers = new Headers();
-    headers.set('Accept', 'application/json');
     const token = sessionStorage.getItem('token');
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
@@ -11,13 +10,31 @@ class HeadersFactory {
     return headers;
   };
 
+  private static buildDefaultHeaders = () => {
+    const headers = HeadersFactory.buildHeaders();
+    headers.set('Accept', 'application/json');
+    return headers;
+  };
+
   static buildGetHeaders = () => {
     return HeadersFactory.buildDefaultHeaders();
+  };
+
+  static buildGetStreamHeaders = () => {
+    const headers = HeadersFactory.buildHeaders();
+    headers.set('Accept', 'application/octet-stream');
+    return headers;
   };
 
   static buildPostHeaders = () => {
     const headers = HeadersFactory.buildDefaultHeaders();
     headers.set('Content-Type', 'application/json');
+    return headers;
+  };
+
+  static buildPostFileHeaders = () => {
+    const headers = HeadersFactory.buildDefaultHeaders();
+    headers.set('Content-Type', 'multipart/form-data');
     return headers;
   };
 }
@@ -78,6 +95,34 @@ export class DefaultDataManager implements DataManager {
         headers: HeadersFactory.buildGetHeaders(),
       }
     );
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(response.statusText);
+  }
+
+  async downloadFile(operationToken: string, fileId: string): Promise<any> {
+    const response = await fetch(
+      `${this.baseUrl}/api/${operationToken}/download/${fileId}`,
+      {
+        method: 'GET',
+        headers: HeadersFactory.buildGetStreamHeaders(),
+      }
+    );
+    console.log(response);
+    if (response.ok) {
+      return await response.blob();
+    }
+    throw new Error(response.statusText);
+  }
+
+  async uploadFile(data: FormData): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/media_objects`, {
+      method: 'POST',
+      headers: HeadersFactory.buildPostFileHeaders(),
+      body: data,
+    });
+    console.log(response);
     if (response.ok) {
       return await response.json();
     }

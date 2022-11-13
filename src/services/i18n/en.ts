@@ -24,4 +24,11 @@ export default {
     logout: 'Logout',
   },
   nodata: 'No data',
+  file: {
+    upload: 'Upload a file',
+  },
+  folder: {
+    new: 'New folder',
+  },
+  new: 'New',
 };
