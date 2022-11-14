@@ -52,6 +52,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [file, setFile] = useState<string | null>(null);
+  const [pageSize, setPageSize] = useState(7);
 
   const showQrCode = (id: string) => {
     setIsModalOpen(true);
@@ -64,8 +65,8 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   };
 
   const getFolders = async () => {
+    let folder;
     try {
-      let folder;
       if (folderId) {
         folder = await dataManager.getFolder(operationToken, folderId);
       } else {
@@ -86,10 +87,10 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         const path = `/media_objects/${file.path}`;
         return Object.assign(file, { key: i++, name: file.path, type, path });
       });
-      return folders.concat(files);
+      return { root: folder.id, data: folders.concat(files) };
     } catch (error) {
       console.error(error);
-      return [];
+      return { root: folder ? folder.id : null, data: [] };
     }
   };
 
@@ -165,7 +166,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     {
       key: 'actions',
       title: 'Actions',
-      align: 'center',
       render: (value, record) => (
         <>
           <QrcodeOutlined onClick={() => showQrCode(record.id)} />
@@ -183,11 +183,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   };
 
   const fileUpload = (options: any) => {
-    console.log(options);
     const data = new FormData();
     data.set('operationID', operationToken);
+    data.set('folderID', folders?.root);
     data.set('file', options.file, options.file.name);
-    dataManager.uploadFile(data);
+    data.set('name', options.file.name);
+    dataManager.uploadFile(data).then(refetch);
   };
 
   const items: MenuProps['items'] = [
@@ -215,20 +216,22 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       <Dropdown
         className="actions-container"
         menu={{ items }}
-        trigger={['click', 'hover']}
+        trigger={['click']}
       >
         <Button size="small" icon={<PlusOutlined />}>
           {t('new')}
         </Button>
       </Dropdown>
       <Table
-        style={{ paddingTop: folders && folders.length > 7 ? 0 : 56 }}
+        style={{
+          paddingTop: folders && folders.data.length > pageSize ? 0 : 56,
+        }}
         columns={columns}
-        dataSource={folders}
+        dataSource={folders?.data}
         scroll={{ x: '100%' }}
         loading={isFetching}
         pagination={{
-          pageSize: 7,
+          pageSize: pageSize,
           hideOnSinglePage: true,
           position: ['topRight', 'bottomRight'],
         }}

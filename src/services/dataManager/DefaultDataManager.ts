@@ -31,12 +31,6 @@ class HeadersFactory {
     headers.set('Content-Type', 'application/json');
     return headers;
   };
-
-  static buildPostFileHeaders = () => {
-    const headers = HeadersFactory.buildDefaultHeaders();
-    headers.set('Content-Type', 'multipart/form-data');
-    return headers;
-  };
 }
 
 export class DefaultDataManager implements DataManager {
@@ -119,10 +113,8 @@ export class DefaultDataManager implements DataManager {
   async uploadFile(data: FormData): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/media_objects`, {
       method: 'POST',
-      headers: HeadersFactory.buildPostFileHeaders(),
       body: data,
     });
-    console.log(response);
     if (response.ok) {
       return await response.json();
     }
