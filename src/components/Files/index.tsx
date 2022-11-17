@@ -3,6 +3,7 @@ import {
   Dropdown,
   message,
   Modal,
+  Popconfirm,
   Table,
   Tag,
   Tooltip,
@@ -149,6 +150,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
   };
 
+  const deleteFile = (file: FileType) => {
+    dataManager
+      .deleteFile(operationToken, file.id)
+      .then(refetch)
+      .catch(console.error);
+  };
+
   const columns: ColumnsType<FileType> = [
     {
       key: 'name',
@@ -187,7 +195,14 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         <>
           <QrcodeOutlined onClick={() => showQrCode(record.id)} />
           <EditOutlined className="edit" />
-          <DeleteOutlined className="delete" />
+          <Popconfirm
+            title="Are you sure？"
+            okText="Yes"
+            cancelText="No"
+            onConfirm={() => deleteFile(record)}
+          >
+            <DeleteOutlined className="delete" />
+          </Popconfirm>{' '}
         </>
       ),
     },

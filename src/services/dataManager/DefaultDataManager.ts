@@ -120,4 +120,8 @@ export class DefaultDataManager implements DataManager {
     }
     throw new Error(response.statusText);
   }
+
+  async deleteFile(operationToken: string, fileId: string): Promise<any> {
+    console.log('not implemented');
+  }
 }

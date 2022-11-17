@@ -4,4 +4,5 @@ export interface DataManager {
   getFolder(operationToken: string, folderId: string | null): Promise<any>;
   downloadFile(operationToken: string, fileId: string): Promise<any>;
   uploadFile(data: FormData): Promise<any>;
+  deleteFile(operationToken: string, fileId: string): Promise<any>;
 }
