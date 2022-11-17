@@ -1,4 +1,13 @@
-import { Button, Dropdown, Modal, Table, Tag, Tooltip, Upload } from 'antd';
+import {
+  Button,
+  Dropdown,
+  message,
+  Modal,
+  Table,
+  Tag,
+  Tooltip,
+  Upload,
+} from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DeleteOutlined,
@@ -51,7 +60,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const [file, setFile] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(7);
 
   const showQrCode = (id: string) => {
@@ -122,7 +131,15 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   };
 
   const onFilenameClick = (file: FileType) => {
-    dataManager.downloadFile(operationToken, file.name);
+    dataManager
+      .downloadFile(operationToken, file.id)
+      .then((blob) => {
+        if (blob.type.indexOf('image') > -1) {
+          setImageFile(URL.createObjectURL(blob));
+          setIsModalOpen(true);
+        }
+      })
+      .catch(console.error);
   };
 
   const getNameComponent = (record: FileType) => {
@@ -179,7 +196,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const hideModal = () => {
     setIsModalOpen(false);
     setQrCode(null);
-    setFile(null);
+    setImageFile(null);
   };
 
   const fileUpload = (options: any) => {
@@ -248,7 +265,15 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         bodyStyle={{ display: 'flex', justifyContent: 'center' }}
       >
         {qrCode && <QRCodeSVG value={qrCode} />}
-        {file && <img />}
+        {imageFile && (
+          <img
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+            }}
+            src={imageFile}
+          />
+        )}
       </Modal>
     </div>
   );
