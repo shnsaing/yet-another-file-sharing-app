@@ -31,6 +31,10 @@ class HeadersFactory {
     headers.set('Content-Type', 'application/json');
     return headers;
   };
+
+  static buildDeleteHeaders = () => {
+    return HeadersFactory.buildDefaultHeaders();
+  };
 }
 
 export class DefaultDataManager implements DataManager {
@@ -103,7 +107,6 @@ export class DefaultDataManager implements DataManager {
         headers: HeadersFactory.buildGetStreamHeaders(),
       }
     );
-    console.log(response);
     if (response.ok) {
       return await response.blob();
     }
@@ -122,6 +125,34 @@ export class DefaultDataManager implements DataManager {
   }
 
   async deleteFile(operationToken: string, fileId: string): Promise<any> {
+    const response = await fetch(
+      `${this.baseUrl}/api/media_objects/${fileId}`,
+      {
+        method: 'DELETE',
+        headers: HeadersFactory.buildDeleteHeaders(),
+      }
+    );
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(response.statusText);
+  }
+
+  async deleteFolder(operationToken: string, folderId: string): Promise<any> {
+    const response = await fetch(
+      `${this.baseUrl}/api/${operationToken}/folders/${folderId}`,
+      {
+        method: 'DELETE',
+        headers: HeadersFactory.buildDeleteHeaders(),
+      }
+    );
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(response.statusText);
+  }
+
+  async createDirectory(operationToken: string): Promise<any> {
     console.log('not implemented');
   }
 }

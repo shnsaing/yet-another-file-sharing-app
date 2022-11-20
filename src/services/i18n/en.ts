@@ -31,4 +31,23 @@ export default {
     new: 'New folder',
   },
   new: 'New',
+  form: {
+    directoryName: 'Directory name',
+  },
+  confirm: {
+    title: 'Are you sure?',
+    ok: 'Yes',
+    cancel: 'No',
+  },
+  notification: {
+    success: {
+      title: 'Success',
+      resourceDeleted: 'The resource has been successfully deleted.',
+    },
+    error: {
+      title: 'Error',
+      unauthorized: 'You are unauthorized to perform this action.',
+      unknown: 'Something went wrong, please try again later.',
+    },
+  },
 };

@@ -31,4 +31,23 @@ export default {
     new: 'Nouveau dossier',
   },
   new: 'Nouveau',
+  form: {
+    directoryName: 'Nom du dossier',
+  },
+  confirm: {
+    title: 'Êtes-vous sûr?',
+    ok: 'Oui',
+    cancel: 'Non',
+  },
+  notification: {
+    success: {
+      title: 'Succès',
+      resourceDeleted: 'La ressource a été correctement supprimée.',
+    },
+    error: {
+      title: 'Erreur',
+      unauthorized: "Vous n'êtes pas autorisé à effectuer cette action.",
+      unknown: 'Une erreur est survenue, veuillez réessayer plus tard.',
+    },
+  },
 };

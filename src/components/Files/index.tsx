@@ -1,8 +1,7 @@
 import {
   Button,
   Dropdown,
-  message,
-  Modal,
+  notification,
   Popconfirm,
   Table,
   Tag,
@@ -20,9 +19,10 @@ import {
   PlusOutlined,
   QrcodeOutlined,
   UploadOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
@@ -32,13 +32,24 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
+import FilesModal from './FilesModal';
 
 import './style.less';
 
 enum Type {
-  folder = 'folder',
-  file = 'file',
-  png = 'png',
+  FOLDER = 'folder',
+  FILE = 'file',
+  PNG = 'png',
+}
+
+enum Action {
+  CLOSE_MODAL,
+  DELETE_FILE,
+  EDIT_ACCESS,
+  EDIT_FILENAME,
+  NEW_FOLDER,
+  SHOW_FILE,
+  SHOW_QRCODE,
 }
 
 interface FileType {
@@ -59,15 +70,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const operationToken = params.operationToken as string;
   const folderId = params.folderId;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(7);
-
-  const showQrCode = (id: string) => {
-    setIsModalOpen(true);
-    setQrCode(`${window.location.origin}/${operationToken}/folder/${id}`);
-  };
 
   const getExtension = (path: string) => {
     const split = path.split('.');
@@ -85,7 +88,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       let i = 1;
       const folders = folder.subfolders.map((folder: FileType) => {
         const path = `/${operationToken}/folder/${folder.id}`;
-        return Object.assign(folder, { key: i++, type: Type.folder, path });
+        return Object.assign(folder, { key: i++, type: Type.FOLDER, path });
       });
       const files = folder.mediaObjects.map((file: FileType) => {
         const type =
@@ -93,7 +96,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             (file.extension
               ? file.extension.toLowerCase()
               : getExtension(file.path)) as keyof typeof Type
-          ] || Type.file;
+          ] || Type.FILE;
         const path = `/media_objects/${file.path}`;
         return Object.assign(file, { key: i++, name: file.path, type, path });
       });
@@ -122,39 +125,125 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const getFileIcon = (type: Type) => {
     switch (type) {
-      case Type.folder:
+      case Type.FOLDER:
         return <FolderOutlined />;
-      case Type.file:
+      case Type.FILE:
         return <FileImageOutlined />;
       default:
         return <FileOutlined />;
     }
   };
 
+  const modalReducer = (state: any, action: any) => {
+    switch (action.type) {
+      case Action.DELETE_FILE:
+        return {
+          showModal: true,
+        };
+      case Action.EDIT_ACCESS:
+        return {
+          showModal: true,
+        };
+      case Action.EDIT_FILENAME:
+        return {
+          showModal: true,
+        };
+      case Action.NEW_FOLDER:
+        return {
+          showModal: true,
+        };
+      case Action.SHOW_QRCODE:
+        return {
+          content: <QRCodeSVG value={action.qrCodeValue} />,
+          showModal: true,
+        };
+      case Action.SHOW_FILE:
+        return {
+          content: (
+            <img
+              style={{
+                maxWidth: '100%',
+                height: 'auto',
+              }}
+              src={action.imageFile}
+            />
+          ),
+          showModal: true,
+        };
+      case Action.CLOSE_MODAL:
+      default:
+        return {
+          content: null,
+          showModal: false,
+        };
+    }
+  };
+
+  const [modalState, modalDispatch] = useReducer(modalReducer, {
+    content: null,
+    showModal: false,
+  });
+
   const onFilenameClick = (file: FileType) => {
     dataManager
       .downloadFile(operationToken, file.id)
       .then((blob) => {
+        const url = URL.createObjectURL(blob);
         if (blob.type.indexOf('image') > -1) {
-          setImageFile(URL.createObjectURL(blob));
-          setIsModalOpen(true);
+          modalDispatch({
+            type: Action.SHOW_FILE,
+            imageFile: url,
+          });
+        } else {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
+          }, 100);
         }
       })
       .catch(console.error);
   };
 
   const getNameComponent = (record: FileType) => {
-    if (record.type === Type.folder) {
+    if (record.type === Type.FOLDER) {
       return <Link to={record.path}>{record.name}</Link>;
     }
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
   };
 
   const deleteFile = (file: FileType) => {
-    dataManager
-      .deleteFile(operationToken, file.id)
-      .then(refetch)
-      .catch(console.error);
+    let promise;
+    if (file.type === Type.FOLDER) {
+      promise = dataManager.deleteFolder(operationToken, file.id);
+    } else {
+      promise = dataManager.deleteFile(operationToken, file.id);
+    }
+    promise
+      .then(() => {
+        notification.success({
+          message: t('notification.success.title'),
+          description: t('notification.success.resourceDeleted'),
+        });
+        refetch();
+      })
+      .catch((e: Error) => {
+        let description;
+        if (e.message === 'Unauthorized' || e.message === 'Forbidden') {
+          description = t('notification.error.unauthorized');
+        } else {
+          description = t('notification.error.unknown');
+        }
+        notification.error({
+          message: t('notification.error.title'),
+          description: description,
+        });
+        console.error(e);
+      });
   };
 
   const columns: ColumnsType<FileType> = [
@@ -193,12 +282,20 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       title: 'Actions',
       render: (value, record) => (
         <>
-          <QrcodeOutlined onClick={() => showQrCode(record.id)} />
+          <QrcodeOutlined
+            onClick={() => {
+              modalDispatch({
+                type: Action.SHOW_QRCODE,
+                qrCodeValue: `${window.location.origin}/${operationToken}/folder/${record.id}`,
+              });
+            }}
+          />
+          <UserOutlined className="access" onClick={() => {}} />
           <EditOutlined className="edit" />
           <Popconfirm
-            title="Are you sure？"
-            okText="Yes"
-            cancelText="No"
+            title={t('confirm.title')}
+            okText={t('confirm.ok')}
+            cancelText={t('confirm.cancel')}
             onConfirm={() => deleteFile(record)}
           >
             <DeleteOutlined className="delete" />
@@ -209,9 +306,9 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   ];
 
   const hideModal = () => {
-    setIsModalOpen(false);
-    setQrCode(null);
-    setImageFile(null);
+    modalDispatch({
+      type: Action.CLOSE_MODAL,
+    });
   };
 
   const fileUpload = (options: any) => {
@@ -226,9 +323,9 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const items: MenuProps['items'] = [
     {
       label: (
-        <Upload showUploadList={false} customRequest={fileUpload} directory>
+        <div onClick={() => {}}>
           <FolderAddOutlined /> {t('folder.new')}
-        </Upload>
+        </div>
       ),
       key: 'folder',
     },
@@ -270,26 +367,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         locale={{ emptyText: t('nodata') }}
         size="middle"
       />
-      <Modal
-        centered
-        open={isModalOpen}
+      <FilesModal
+        showModal={modalState?.showModal}
         onOk={hideModal}
-        okText="Ok"
         onCancel={hideModal}
-        cancelText={t('modal.close')}
-        bodyStyle={{ display: 'flex', justifyContent: 'center' }}
       >
-        {qrCode && <QRCodeSVG value={qrCode} />}
-        {imageFile && (
-          <img
-            style={{
-              maxWidth: '100%',
-              height: 'auto',
-            }}
-            src={imageFile}
-          />
-        )}
-      </Modal>
+        {modalState?.content}
+      </FilesModal>
     </div>
   );
 };
