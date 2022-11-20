@@ -132,10 +132,9 @@ export class DefaultDataManager implements DataManager {
         headers: HeadersFactory.buildDeleteHeaders(),
       }
     );
-    if (response.ok) {
-      return await response.json();
+    if (!response.ok) {
+      throw new Error(response.statusText);
     }
-    throw new Error(response.statusText);
   }
 
   async deleteFolder(operationToken: string, folderId: string): Promise<any> {
@@ -146,10 +145,9 @@ export class DefaultDataManager implements DataManager {
         headers: HeadersFactory.buildDeleteHeaders(),
       }
     );
-    if (response.ok) {
-      return await response.json();
+    if (!response.ok) {
+      throw new Error(response.statusText);
     }
-    throw new Error(response.statusText);
   }
 
   async createDirectory(operationToken: string, data: any): Promise<any> {
