@@ -6,5 +6,5 @@ export interface DataManager {
   uploadFile(data: FormData): Promise<any>;
   deleteFile(operationToken: string, fileId: string): Promise<any>;
   deleteFolder(operationToken: string, folderId: string): Promise<any>;
-  createDirectory(operationToken: string): Promise<any>;
+  createDirectory(operationToken: string, data: any): Promise<any>;
 }

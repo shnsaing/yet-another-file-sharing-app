@@ -152,7 +152,16 @@ export class DefaultDataManager implements DataManager {
     throw new Error(response.statusText);
   }
 
-  async createDirectory(operationToken: string): Promise<any> {
-    console.log('not implemented');
+  async createDirectory(operationToken: string, data: any): Promise<any> {
+    const { name, parent } = data;
+    const response = await fetch(`${this.baseUrl}/api/folders`, {
+      method: 'POST',
+      headers: HeadersFactory.buildPostHeaders(),
+      body: JSON.stringify({ name, parent, operation: operationToken }),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error(response.statusText);
   }
 }

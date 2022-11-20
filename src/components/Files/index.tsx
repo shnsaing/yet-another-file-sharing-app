@@ -33,6 +33,7 @@ import withDataManager, {
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
 import FilesModal from './FilesModal';
+import ModalForm from './ModalForm';
 
 import './style.less';
 
@@ -134,7 +135,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     }
   };
 
-  const modalReducer = (state: any, action: any) => {
+  const [modalFormData, setModalFormData] = useState<any | null>(null);
+
+  const handleFormValues = (changedValues: any, allValues: any) => {
+    setModalFormData(allValues);
+  };
+
+  const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
       case Action.DELETE_FILE:
         return {
@@ -142,14 +149,29 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         };
       case Action.EDIT_ACCESS:
         return {
+          action: Action.EDIT_ACCESS,
           showModal: true,
         };
       case Action.EDIT_FILENAME:
         return {
+          action: Action.EDIT_FILENAME,
+          content: (
+            <ModalForm
+              inputs={[{ name: 'name', value: action.file.name }]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.NEW_FOLDER:
         return {
+          action: Action.NEW_FOLDER,
+          content: (
+            <ModalForm
+              inputs={[{ name: 'directoryName' }]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.SHOW_QRCODE:
@@ -172,6 +194,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         };
       case Action.CLOSE_MODAL:
       default:
+        setModalFormData(null);
         return {
           content: null,
           showModal: false,
@@ -216,6 +239,20 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
   };
 
+  const showErrorNotification = (error: Error | any) => {
+    let description;
+    if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
+      description = t('notification.error.unauthorized');
+    } else {
+      description = t('notification.error.unknown');
+    }
+    notification.error({
+      message: t('notification.error.title'),
+      description: description,
+    });
+    console.error(error);
+  };
+
   const deleteFile = (file: FileType) => {
     let promise;
     if (file.type === Type.FOLDER) {
@@ -231,19 +268,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         });
         refetch();
       })
-      .catch((e: Error) => {
-        let description;
-        if (e.message === 'Unauthorized' || e.message === 'Forbidden') {
-          description = t('notification.error.unauthorized');
-        } else {
-          description = t('notification.error.unknown');
-        }
-        notification.error({
-          message: t('notification.error.title'),
-          description: description,
-        });
-        console.error(e);
-      });
+      .catch(showErrorNotification);
   };
 
   const columns: ColumnsType<FileType> = [
@@ -290,8 +315,23 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
               });
             }}
           />
-          <UserOutlined className="access" onClick={() => {}} />
-          <EditOutlined className="edit" />
+          <UserOutlined
+            className="access"
+            onClick={() => {
+              modalDispatch({
+                type: Action.EDIT_ACCESS,
+              });
+            }}
+          />
+          <EditOutlined
+            className="edit"
+            onClick={() => {
+              modalDispatch({
+                type: Action.EDIT_FILENAME,
+                file: record,
+              });
+            }}
+          />
           <Popconfirm
             title={t('confirm.title')}
             okText={t('confirm.ok')}
@@ -305,12 +345,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
   ];
 
-  const hideModal = () => {
-    modalDispatch({
-      type: Action.CLOSE_MODAL,
-    });
-  };
-
   const fileUpload = (options: any) => {
     const data = new FormData();
     data.set('operationID', operationToken);
@@ -323,7 +357,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const items: MenuProps['items'] = [
     {
       label: (
-        <div onClick={() => {}}>
+        <div
+          onClick={() => {
+            modalDispatch({
+              type: Action.NEW_FOLDER,
+            });
+          }}
+        >
           <FolderAddOutlined /> {t('folder.new')}
         </div>
       ),
@@ -339,6 +379,37 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       key: 'file',
     },
   ];
+
+  const hideModal = () => {
+    modalDispatch({
+      type: Action.CLOSE_MODAL,
+    });
+  };
+
+  const modalOnOk = async () => {
+    if (modalState.action && modalFormData) {
+      switch (modalState.action) {
+        case Action.EDIT_ACCESS:
+          refetch();
+          break;
+        case Action.EDIT_FILENAME:
+          refetch();
+          break;
+        case Action.NEW_FOLDER:
+          try {
+            await dataManager.createDirectory(operationToken, {
+              name: modalFormData.directoryName,
+              parent: folders?.root,
+            });
+            refetch();
+          } catch (e) {
+            showErrorNotification(e);
+          }
+          break;
+      }
+    }
+    hideModal();
+  };
 
   return (
     <div className="files-container">
@@ -368,11 +439,11 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         size="middle"
       />
       <FilesModal
-        showModal={modalState?.showModal}
-        onOk={hideModal}
+        showModal={modalState.showModal}
+        onOk={modalOnOk}
         onCancel={hideModal}
       >
-        {modalState?.content}
+        {modalState.content}
       </FilesModal>
     </div>
   );

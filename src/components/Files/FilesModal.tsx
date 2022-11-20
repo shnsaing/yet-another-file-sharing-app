@@ -33,6 +33,7 @@ const FilesModal = ({
       onCancel={onCancel}
       cancelText={t('modal.close')}
       bodyStyle={{ display: 'flex', justifyContent: 'center' }}
+      destroyOnClose
     >
       {children}
     </Modal>

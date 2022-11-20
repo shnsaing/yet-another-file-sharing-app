@@ -46,7 +46,7 @@ export default {
     },
     error: {
       title: 'Error',
-      unauthorized: 'You are unauthorized to perform this action.',
+      unauthorized: 'You are not authorized to perform this action.',
       unknown: 'Something went wrong, please try again later.',
     },
   },
