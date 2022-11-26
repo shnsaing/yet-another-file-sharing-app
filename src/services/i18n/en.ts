@@ -43,6 +43,7 @@ export default {
     success: {
       title: 'Success',
       resourceDeleted: 'The resource has been successfully deleted.',
+      fileImported: 'The file has been successfully uploaded.',
     },
     error: {
       title: 'Error',
