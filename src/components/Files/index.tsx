@@ -34,14 +34,10 @@ import withDataManager, {
 import withTranslation from '../../hoc/withTranslation';
 import FilesModal from './FilesModal';
 import ModalForm from './ModalForm';
+import type File from './File';
+import { Type } from './File';
 
 import './style.less';
-
-enum Type {
-  FOLDER = 'folder',
-  FILE = 'file',
-  PNG = 'png',
-}
 
 enum Action {
   CLOSE_MODAL,
@@ -53,13 +49,10 @@ enum Action {
   SHOW_QRCODE,
 }
 
-interface FileType {
+interface FileType extends File {
   key: React.Key;
-  id: string;
-  name: string;
-  createdAt: Date;
   path: string;
-  type: Type;
+  type: string;
   extension?: string;
 }
 
@@ -233,7 +226,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   };
 
   const getNameComponent = (record: FileType) => {
-    if (record.type === Type.FOLDER) {
+    if (record['@type'] === Type.FOLDER) {
       return <Link to={record.path}>{record.name}</Link>;
     }
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
@@ -255,10 +248,10 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const deleteFile = (file: FileType) => {
     let promise;
-    if (file.type === Type.FOLDER) {
-      promise = dataManager.deleteFolder(operationToken, file.id);
+    if (file['@type'] === Type.FOLDER) {
+      promise = dataManager.deleteFolder(operationToken, file);
     } else {
-      promise = dataManager.deleteFile(operationToken, file.id);
+      promise = dataManager.deleteFile(operationToken, file);
     }
     promise
       .then(() => {
@@ -280,7 +273,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       },
       render: (value, record) => (
         <Tooltip placement="bottomLeft" title={record.name}>
-          {getFileIcon(record.type)} {getNameComponent(record)}
+          {getFileIcon(record['@type'])} {getNameComponent(record)}
         </Tooltip>
       ),
     },
@@ -300,7 +293,9 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       title: 'Type',
       dataIndex: 'type',
       responsive: ['md'],
-      render: (value) => <Tag>{t(`type.${value}`, value)}</Tag>,
+      render: (value) => (
+        <Tag>{t(`type.${value.toLowerCase()}`, value.toLowerCase())}</Tag>
+      ),
     },
     {
       key: 'actions',
@@ -351,7 +346,19 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     data.set('folderID', folders?.root);
     data.set('file', options.file, options.file.name);
     data.set('name', options.file.name);
-    dataManager.uploadFile(data).then(refetch);
+    dataManager
+      .uploadFile(data)
+      .then(() => {
+        notification.success({
+          message: t('notification.success.title'),
+          description: t('notification.success.fileImported'),
+        });
+        refetch();
+      })
+      .catch((e) => {
+        console.error(e);
+        showErrorNotification(e);
+      });
   };
 
   const items: MenuProps['items'] = [
