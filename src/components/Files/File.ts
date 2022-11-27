@@ -8,8 +8,8 @@ type File = {
   '@type': Type;
   id: string;
   name: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export default File;

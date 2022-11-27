@@ -51,4 +51,12 @@ export default {
       unknown: 'Something went wrong, please try again later.',
     },
   },
+  home: 'Home',
+  name: 'Name',
+  createdAt: 'Created at',
+  updatedAt: 'Updated at',
+  user: {
+    roles: 'Roles',
+    new: 'New user',
+  },
 };

@@ -1,7 +1,6 @@
 import {
   Button,
   Dropdown,
-  notification,
   Popconfirm,
   Table,
   Tag,
@@ -21,7 +20,7 @@ import {
   UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { ColumnsType } from 'antd/lib/table';
+import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
 import React, { FC, useEffect, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -32,12 +31,18 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import FilesModal from './FilesModal';
+import Modal from '../CustomModal';
 import ModalForm from './ModalForm';
 import type File from './File';
 import { Type } from './File';
+import {
+  getFormattedDate,
+  showErrorNotification,
+  showSuccesNotification,
+} from '../../services/utils';
 
-import './style.less';
+import '../../style.less';
+import { FilterValue, SorterResult } from 'antd/lib/table/interface';
 
 enum Action {
   CLOSE_MODAL,
@@ -65,6 +70,10 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const folderId = params.folderId;
 
   const [pageSize, setPageSize] = useState(7);
+  const [paddingTop, setPaddingTop] = useState(56);
+  const [filteredInfo, setFilteredInfo] = useState<
+    Record<string, FilterValue | null>
+  >({});
 
   const getExtension = (path: string) => {
     const split = path.split('.');
@@ -94,7 +103,9 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         const path = `/media_objects/${file.path}`;
         return Object.assign(file, { key: i++, name: file.path, type, path });
       });
-      return { root: folder.id, data: folders.concat(files) };
+      const data = folders.concat(files);
+      setPaddingTop(data.length > pageSize ? 0 : 56);
+      return { root: folder.id, data };
     } catch (error) {
       console.error(error);
       return { root: folder ? folder.id : null, data: [] };
@@ -109,6 +120,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     onError: (e) => {
       console.error(e);
     },
+    refetchOnWindowFocus: false,
   });
 
   let location = useLocation();
@@ -227,23 +239,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const getNameComponent = (record: FileType) => {
     if (record['@type'] === Type.FOLDER) {
-      return <Link to={record.path}>{record.name}</Link>;
+      return (
+        <Link onClick={() => setFilteredInfo({})} to={record.path}>
+          {record.name}
+        </Link>
+      );
     }
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
-  };
-
-  const showErrorNotification = (error: Error | any) => {
-    let description;
-    if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
-      description = t('notification.error.unauthorized');
-    } else {
-      description = t('notification.error.unknown');
-    }
-    notification.error({
-      message: t('notification.error.title'),
-      description: description,
-    });
-    console.error(error);
   };
 
   const deleteFile = (file: FileType) => {
@@ -255,22 +257,20 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     }
     promise
       .then(() => {
-        notification.success({
-          message: t('notification.success.title'),
-          description: t('notification.success.resourceDeleted'),
-        });
+        showSuccesNotification('resourceDeleted', t);
         refetch();
       })
-      .catch(showErrorNotification);
+      .catch((e) => showErrorNotification(e, t));
   };
 
   const columns: ColumnsType<FileType> = [
     {
       key: 'name',
-      title: 'Nom',
+      title: t('name'),
       ellipsis: {
         showTitle: false,
       },
+      sorter: (a, b) => a.name.localeCompare(b.name),
       render: (value, record) => (
         <Tooltip placement="bottomLeft" title={record.name}>
           {getFileIcon(record['@type'])} {getNameComponent(record)}
@@ -279,20 +279,39 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
     {
       key: 'createdAt',
-      title: 'Créé le',
+      title: t('createdAt'),
       dataIndex: 'createdAt',
       responsive: ['md'],
-      render: (value) =>
-        new Intl.DateTimeFormat('fr', {
-          dateStyle: 'short',
-          timeStyle: 'medium',
-        }).format(new Date(value)),
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: getFormattedDate,
+    },
+    {
+      key: 'updatedAt',
+      title: t('updatedAt'),
+      dataIndex: 'updatedAt',
+      responsive: ['md'],
+      sorter: (a, b) =>
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      render: getFormattedDate,
     },
     {
       key: 'type',
       title: 'Type',
       dataIndex: 'type',
       responsive: ['md'],
+      filters: [
+        {
+          text: t(`type.${Type.FOLDER.toLowerCase()}`),
+          value: Type.FOLDER,
+        },
+        {
+          text: t(`type.${Type.FILE.toLowerCase()}`),
+          value: Type.FILE,
+        },
+      ],
+      filteredValue: filteredInfo.type || null,
+      onFilter: (value: string, record) => value === record.type,
       render: (value) => (
         <Tag>{t(`type.${value.toLowerCase()}`, value.toLowerCase())}</Tag>
       ),
@@ -334,7 +353,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             onConfirm={() => deleteFile(record)}
           >
             <DeleteOutlined className="delete" />
-          </Popconfirm>{' '}
+          </Popconfirm>
         </>
       ),
     },
@@ -349,15 +368,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     dataManager
       .uploadFile(data)
       .then(() => {
-        notification.success({
-          message: t('notification.success.title'),
-          description: t('notification.success.fileImported'),
-        });
+        showSuccesNotification('fileImported', t);
         refetch();
       })
       .catch((e) => {
         console.error(e);
-        showErrorNotification(e);
+        showErrorNotification(e, t);
       });
   };
 
@@ -410,12 +426,26 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             });
             refetch();
           } catch (e) {
-            showErrorNotification(e);
+            showErrorNotification(e, t);
           }
           break;
       }
     }
     hideModal();
+  };
+
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    filters: Record<string, FilterValue>,
+    sorter: SorterResult<FileType>,
+    extra: { currentDataSource: []; action: any }
+  ) => {
+    setFilteredInfo(filters);
+    if (extra.currentDataSource.length > pageSize) {
+      setPaddingTop(0);
+    } else {
+      setPaddingTop(56);
+    }
   };
 
   return (
@@ -430,9 +460,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         </Button>
       </Dropdown>
       <Table
-        style={{
-          paddingTop: folders && folders.data.length > pageSize ? 0 : 56,
-        }}
+        style={{ paddingTop }}
         columns={columns}
         dataSource={folders?.data}
         scroll={{ x: '100%' }}
@@ -444,14 +472,16 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         }}
         locale={{ emptyText: t('nodata') }}
         size="middle"
+        onChange={handleTableChange}
+        showSorterTooltip={false}
       />
-      <FilesModal
+      <Modal
         showModal={modalState.showModal}
         onOk={modalOnOk}
         onCancel={hideModal}
       >
         {modalState.content}
-      </FilesModal>
+      </Modal>
     </div>
   );
 };

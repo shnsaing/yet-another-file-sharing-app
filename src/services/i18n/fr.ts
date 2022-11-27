@@ -51,4 +51,12 @@ export default {
       unknown: 'Une erreur est survenue, veuillez réessayer plus tard.',
     },
   },
+  home: 'Accueil',
+  name: 'Nom',
+  createdAt: 'Créé le',
+  updatedAt: 'Mis à jour le',
+  user: {
+    roles: 'Rôles',
+    new: 'Nouvel utilisateur',
+  },
 };

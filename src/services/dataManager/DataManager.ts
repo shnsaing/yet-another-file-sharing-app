@@ -9,4 +9,5 @@ export interface DataManager {
   deleteFile(operationToken: string, file: File): Promise<any>;
   deleteFolder(operationToken: string, folder: File): Promise<any>;
   createDirectory(operationToken: string, data: any): Promise<any>;
+  getUsers(): Promise<any[]>;
 }

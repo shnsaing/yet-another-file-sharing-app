@@ -1,15 +1,16 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import {
   createBrowserRouter,
   Navigate,
   RouterProvider,
+  useNavigate,
 } from 'react-router-dom';
-import jwt_decode from 'jwt-decode';
 
 import FilesPage from './components/Files';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
+import UsersPage from './components/Users';
 import { Role } from './services/auth/auth';
 
 type ProtectedRouteProps = {
@@ -17,17 +18,22 @@ type ProtectedRouteProps = {
   children?: React.ReactNode;
 };
 
+const LogoutPage = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    sessionStorage.clear();
+    navigate('/');
+  }, []);
+  return null;
+};
+
 const ProtectedRoute = ({
   rolesAllowed,
   children,
 }: ProtectedRouteProps): JSX.Element => {
-  const token = sessionStorage.getItem('token');
-  if (token) {
-    const decoded: any = jwt_decode(token);
-    const role = decoded.roles.find(
-      (role: Role) => rolesAllowed.indexOf(role) > 0
-    );
-    if (role) {
+  const role = sessionStorage.getItem('role');
+  if (role) {
+    if (rolesAllowed.find((allowedRole) => role === allowedRole)) {
       return <React.Fragment>{children}</React.Fragment>;
     }
   }
@@ -66,7 +72,7 @@ const router = createBrowserRouter([
         path: 'users',
         element: (
           <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
-            <div />
+            <UsersPage />
           </ProtectedRoute>
         ),
       },
@@ -115,6 +121,10 @@ const router = createBrowserRouter([
   {
     path: 'login',
     element: <LoginPage />,
+  },
+  {
+    path: 'logout',
+    element: <LogoutPage />,
   },
 ]);
 

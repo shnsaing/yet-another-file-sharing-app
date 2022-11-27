@@ -27,12 +27,13 @@ const LoginPage: FC = ({
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
-      const { token, refreshToken } = await dataManager.login(
+      const { token, refreshToken, role } = await dataManager.login(
         values.email,
         values.password
       );
       sessionStorage.setItem('token', token);
       sessionStorage.setItem('refresh_token', refreshToken);
+      sessionStorage.setItem('role', role);
       navigate(-1);
     } catch (e) {
       console.error(e);

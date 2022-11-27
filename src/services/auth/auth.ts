@@ -1,6 +1,6 @@
 export enum Role {
   USER = 'ROLE_USER',
-  CLIENT = 'ROLE_CLIENT',
+  CLIENT = 'ROLE_ADMIN_CLIENT',
   ADMIN = 'ROLE_ADMIN',
 }
 
@@ -27,10 +27,10 @@ export enum UserAction {
 export type Action = FileAction | OperationAction | UserAction;
 
 const permissions = {
-  [FileAction.CREATE_FILE]: [Role.USER, Role.CLIENT, Role.ADMIN],
-  [FileAction.CREATE_FOLDER]: [Role.USER, Role.CLIENT, Role.ADMIN],
-  [FileAction.DELETE_FOLDER]: [Role.USER, Role.CLIENT, Role.ADMIN],
-  [FileAction.MODIFY_FOLDER]: [Role.USER, Role.CLIENT, Role.ADMIN],
+  [FileAction.CREATE_FILE]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.CREATE_FOLDER]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.DELETE_FOLDER]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.MODIFY_FOLDER]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.CREATE_OPERATION]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.DELETE_OPERATION]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.MODIFY_OPERATION]: [Role.CLIENT, Role.ADMIN],

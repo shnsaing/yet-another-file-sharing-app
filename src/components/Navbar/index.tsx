@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Drawer, Layout } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { Drawer, Layout, Menu, MenuProps } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { WithTranslation } from 'react-i18next';
 import { MenuOutlined } from '@ant-design/icons';
 
@@ -14,28 +14,35 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const navigate = useNavigate();
 
-  const logout = () => {
-    sessionStorage.removeItem('token');
-    navigate(0); // refresh the page
-  };
-
   const getMenu = () => {
-    const menu: React.ReactElement[] = [];
-    let key = 1;
+    const menu: MenuProps['items'] = [];
+    menu.push({
+      label: t('home'),
+      key: '/',
+    });
     if (sessionStorage.getItem('token')) {
       menu.push(
-        <a key={key++} onClick={() => logout()}>
-          {t('menu.logout')}
-        </a>
+        {
+          label: 'Administration',
+          key: '/admin/users',
+        },
+        {
+          label: t('menu.logout'),
+          key: '/logout',
+        }
       );
     } else {
-      menu.push(
-        <Link key={key++} to="/login">
-          {t('menu.login')}
-        </Link>
-      );
+      menu.push({
+        label: t('menu.login'),
+        key: '/login',
+      });
     }
     return menu;
+  };
+
+  const menuOnClick: MenuProps['onClick'] = (e) => {
+    navigate(e.key);
+    setOpenDrawer(false);
   };
 
   const getDrawer = () => {
@@ -49,7 +56,12 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
         drawerStyle={{ overflowX: 'hidden' }}
         width={260}
       >
-        {getMenu()}
+        <Menu
+          defaultSelectedKeys={['/']}
+          onClick={menuOnClick}
+          mode="vertical"
+          items={getMenu()}
+        />
       </Drawer>
     );
   };

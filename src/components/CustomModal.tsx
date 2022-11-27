@@ -2,26 +2,22 @@ import React from 'react';
 import { Form, Modal } from 'antd';
 import { WithTranslation } from 'react-i18next';
 
-import withTranslation from '../../hoc/withTranslation';
+import withTranslation from '../hoc/withTranslation';
 
-type Input = {
-  name: string;
-};
-
-interface FilesModalProps extends WithTranslation {
+interface CustomModalProps extends WithTranslation {
   showModal: boolean;
   onOk: () => void;
   onCancel: () => void;
   children?: React.ReactNode;
 }
 
-const FilesModal = ({
+const CustomModal = ({
   t,
   showModal,
   onOk,
   onCancel,
   children,
-}: FilesModalProps) => {
+}: CustomModalProps) => {
   const [form] = Form.useForm();
 
   return (
@@ -40,4 +36,4 @@ const FilesModal = ({
   );
 };
 
-export default withTranslation(FilesModal);
+export default withTranslation(CustomModal);
