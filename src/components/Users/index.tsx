@@ -7,7 +7,8 @@ import {
   UserDeleteOutlined,
 } from '@ant-design/icons';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
-import React, { FC, useEffect, useReducer, useState } from 'react';
+import { FilterValue, SorterResult } from 'antd/lib/table/interface';
+import React, { FC, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
@@ -17,11 +18,11 @@ import withDataManager, {
 import withTranslation from '../../hoc/withTranslation';
 import { Role } from '../../services/auth/auth';
 import { getFormattedDate } from '../../services/utils';
-import Modal from '../CustomModal';
+import Modal from '../Modal';
+import ModalForm from '../Modal/ModalForm';
 import User from './User';
 
 import '../../style.less';
-import { FilterValue, SorterResult } from 'antd/lib/table/interface';
 
 interface UserType extends User {
   key: React.Key;
@@ -73,11 +74,35 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
       case Action.CREATE:
         return {
           action: Action.CREATE,
+          content: (
+            <ModalForm
+              inputs={[
+                { name: 'email' },
+                { name: 'roles', possibleValues: Object.values(Role) },
+                { name: 'password' },
+              ]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.UPDATE:
         return {
           action: Action.UPDATE,
+          content: (
+            <ModalForm
+              inputs={[
+                { name: 'email', value: action.user.email },
+                {
+                  name: 'roles',
+                  values: action.user.roles,
+                  possibleValues: Object.values(Role),
+                },
+                { name: 'password' },
+              ]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.DELETE:
@@ -170,7 +195,7 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
             onClick={() => {
               modalDispatch({
                 type: Action.UPDATE,
-                file: record,
+                user: record,
               });
             }}
           />

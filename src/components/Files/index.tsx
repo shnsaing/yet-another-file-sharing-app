@@ -21,6 +21,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
+import { FilterValue, SorterResult } from 'antd/lib/table/interface';
 import React, { FC, useEffect, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -31,8 +32,8 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import Modal from '../CustomModal';
-import ModalForm from './ModalForm';
+import Modal from '../Modal';
+import ModalForm from '../Modal/ModalForm';
 import type File from './File';
 import { Type } from './File';
 import {
@@ -42,8 +43,6 @@ import {
 } from '../../services/utils';
 
 import '../../style.less';
-import { FilterValue, SorterResult } from 'antd/lib/table/interface';
-
 enum Action {
   CLOSE_MODAL,
   DELETE_FILE,

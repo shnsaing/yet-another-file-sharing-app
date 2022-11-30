@@ -33,6 +33,8 @@ export default {
   new: 'Nouveau',
   form: {
     directoryName: 'Nom du dossier',
+    invalidInput: 'Veuillez renseigner une valeur.',
+    roles: 'Rôle(s)',
   },
   confirm: {
     title: 'Êtes-vous sûr?',
