@@ -4,11 +4,18 @@ export enum Role {
   ADMIN = 'ROLE_ADMIN',
 }
 
+export enum ModalAction {
+  CLOSE_MODAL,
+}
+
 export enum FileAction {
-  CREATE_FILE,
+  UPLOAD_FILE,
   CREATE_FOLDER,
-  DELETE_FOLDER,
-  MODIFY_FOLDER,
+  DELETE_FILE,
+  EDIT_ACCESS,
+  EDIT_FILENAME,
+  SHOW_FILE,
+  SHOW_QRCODE,
 }
 
 export enum OperationAction {
@@ -24,13 +31,16 @@ export enum UserAction {
   READ_USER,
 }
 
-export type Action = FileAction | OperationAction | UserAction;
+export type Action = FileAction | OperationAction | UserAction | ModalAction;
 
 const permissions = {
-  [FileAction.CREATE_FILE]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.UPLOAD_FILE]: [Role.CLIENT, Role.ADMIN],
   [FileAction.CREATE_FOLDER]: [Role.CLIENT, Role.ADMIN],
-  [FileAction.DELETE_FOLDER]: [Role.CLIENT, Role.ADMIN],
-  [FileAction.MODIFY_FOLDER]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.DELETE_FILE]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.EDIT_ACCESS]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.EDIT_FILENAME]: [Role.CLIENT, Role.ADMIN],
+  [FileAction.SHOW_FILE]: null,
+  [FileAction.SHOW_QRCODE]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.CREATE_OPERATION]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.DELETE_OPERATION]: [Role.CLIENT, Role.ADMIN],
   [OperationAction.MODIFY_OPERATION]: [Role.CLIENT, Role.ADMIN],
@@ -41,3 +51,15 @@ const permissions = {
 };
 
 export default permissions;
+
+export const isAuthorized = (action: Action) => {
+  const role = sessionStorage.getItem('role');
+  if (role) {
+    const perm = permissions[action];
+    if (perm === null) {
+      return true;
+    }
+    return !!perm.find((allowedRole) => role === allowedRole);
+  }
+  return false;
+};

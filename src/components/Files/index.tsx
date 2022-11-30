@@ -41,17 +41,13 @@ import {
   showErrorNotification,
   showSuccesNotification,
 } from '../../services/utils';
+import {
+  FileAction as Action,
+  isAuthorized,
+  ModalAction,
+} from '../../services/auth/auth';
 
 import '../../style.less';
-enum Action {
-  CLOSE_MODAL,
-  DELETE_FILE,
-  EDIT_ACCESS,
-  EDIT_FILENAME,
-  NEW_FOLDER,
-  SHOW_FILE,
-  SHOW_QRCODE,
-}
 
 interface FileType extends File {
   key: React.Key;
@@ -147,10 +143,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
-      case Action.DELETE_FILE:
-        return {
-          showModal: true,
-        };
       case Action.EDIT_ACCESS:
         return {
           action: Action.EDIT_ACCESS,
@@ -167,9 +159,9 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           ),
           showModal: true,
         };
-      case Action.NEW_FOLDER:
+      case Action.CREATE_FOLDER:
         return {
-          action: Action.NEW_FOLDER,
+          action: Action.CREATE_FOLDER,
           content: (
             <ModalForm
               inputs={[{ name: 'directoryName' }]}
@@ -196,7 +188,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           ),
           showModal: true,
         };
-      case Action.CLOSE_MODAL:
+      case ModalAction.CLOSE_MODAL:
       default:
         setModalFormData(null);
         return {
@@ -315,48 +307,69 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         <Tag>{t(`type.${value.toLowerCase()}`, value.toLowerCase())}</Tag>
       ),
     },
-    {
+  ];
+
+  /**
+   * Add actions
+   */
+  const permissions = [
+    Action.SHOW_QRCODE,
+    Action.EDIT_ACCESS,
+    Action.EDIT_FILENAME,
+    Action.SHOW_QRCODE,
+  ].filter((action) => isAuthorized(action));
+
+  if (permissions.length > 0) {
+    columns.push({
       key: 'actions',
       title: 'Actions',
       render: (value, record) => (
         <>
-          <QrcodeOutlined
-            onClick={() => {
-              modalDispatch({
-                type: Action.SHOW_QRCODE,
-                qrCodeValue: `${window.location.origin}/${operationToken}/folder/${record.id}`,
-              });
-            }}
-          />
-          <UserOutlined
-            className="access"
-            onClick={() => {
-              modalDispatch({
-                type: Action.EDIT_ACCESS,
-              });
-            }}
-          />
-          <EditOutlined
-            className="edit"
-            onClick={() => {
-              modalDispatch({
-                type: Action.EDIT_FILENAME,
-                file: record,
-              });
-            }}
-          />
-          <Popconfirm
-            title={t('confirm.title')}
-            okText={t('confirm.ok')}
-            cancelText={t('confirm.cancel')}
-            onConfirm={() => deleteFile(record)}
-          >
-            <DeleteOutlined className="delete" />
-          </Popconfirm>
+          {permissions.indexOf(Action.SHOW_QRCODE) > -1 && (
+            <QrcodeOutlined
+              onClick={() => {
+                modalDispatch({
+                  type: Action.SHOW_QRCODE,
+                  qrCodeValue: `${window.location.origin}/${operationToken}/folder/${record.id}`,
+                });
+              }}
+            />
+          )}
+          {permissions.indexOf(Action.EDIT_ACCESS) > -1 && (
+            <UserOutlined
+              className="access"
+              onClick={() => {
+                modalDispatch({
+                  type: Action.EDIT_ACCESS,
+                });
+              }}
+            />
+          )}
+          {permissions.indexOf(Action.EDIT_FILENAME) > -1 && (
+            <EditOutlined
+              className="edit"
+              onClick={() => {
+                modalDispatch({
+                  type: Action.EDIT_FILENAME,
+                  file: record,
+                });
+              }}
+            />
+          )}
+          {permissions.indexOf(Action.DELETE_FILE) > -1 && (
+            <Popconfirm
+              title={t('confirm.title')}
+              okText={t('confirm.ok')}
+              cancelText={t('confirm.cancel')}
+              onConfirm={() => deleteFile(record)}
+            >
+              <DeleteOutlined className="delete" />
+            </Popconfirm>
+          )}
         </>
       ),
-    },
-  ];
+    });
+  }
 
   const fileUpload = (options: any) => {
     const data = new FormData();
@@ -376,13 +389,17 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       });
   };
 
-  const items: MenuProps['items'] = [
-    {
+  /**
+   * New file/folder buttons
+   */
+  const items: MenuProps['items'] = [];
+  if (isAuthorized(Action.CREATE_FOLDER)) {
+    items.push({
       label: (
         <div
           onClick={() => {
             modalDispatch({
-              type: Action.NEW_FOLDER,
+              type: Action.CREATE_FOLDER,
             });
           }}
         >
@@ -390,21 +407,22 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         </div>
       ),
       key: 'folder',
-    },
-    { type: 'divider' },
-    {
+    });
+  }
+  if (isAuthorized(Action.UPLOAD_FILE)) {
+    items.push({
       label: (
         <Upload showUploadList={false} customRequest={fileUpload}>
           <UploadOutlined /> {t('file.upload')}
         </Upload>
       ),
       key: 'file',
-    },
-  ];
+    });
+  }
 
   const hideModal = () => {
     modalDispatch({
-      type: Action.CLOSE_MODAL,
+      type: ModalAction.CLOSE_MODAL,
     });
   };
 
@@ -417,7 +435,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         case Action.EDIT_FILENAME:
           refetch();
           break;
-        case Action.NEW_FOLDER:
+        case Action.CREATE_FOLDER:
           try {
             await dataManager.createDirectory(operationToken, {
               name: modalFormData.directoryName,
@@ -449,15 +467,17 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   return (
     <div className="files-container">
-      <Dropdown
-        className="actions-container"
-        menu={{ items }}
-        trigger={['click']}
-      >
-        <Button size="small" icon={<PlusOutlined />}>
-          {t('new')}
-        </Button>
-      </Dropdown>
+      {items.length > 0 && (
+        <Dropdown
+          className="actions-container"
+          menu={{ items }}
+          trigger={['click']}
+        >
+          <Button size="small" icon={<PlusOutlined />}>
+            {t('new')}
+          </Button>
+        </Dropdown>
+      )}
       <Table
         style={{ paddingTop }}
         columns={columns}
