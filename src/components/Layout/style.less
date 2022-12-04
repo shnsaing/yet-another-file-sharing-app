@@ -1,15 +1,24 @@
+@import '../../variables.less';
+
 .layout {
   height: 100%;
 
   .content-wrapper {
-    padding: 0 50px;
     height: calc(100% - 64px - 70px);
+
+    @media @tablet, @desktop {
+      padding: 0 50px;
+    }
 
     .content {
       overflow: auto;
-      height: calc(100% - 32px);
       background: #fff;
-      margin-top: 32px;
+      height: 100%;
+
+      @media @tablet, @desktop {
+        margin-top: 32px;
+        height: calc(100% - 32px);
+      }
     }
   }
 }
