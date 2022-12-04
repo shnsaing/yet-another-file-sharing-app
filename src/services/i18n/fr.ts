@@ -61,4 +61,8 @@ export default {
     roles: 'Rôles',
     new: 'Nouvel utilisateur',
   },
+  welcome: 'Bienvenue sur Kiken.',
+  appDescriptionConnected: 'Veuillez scanner un QR code pour continuer.',
+  appDescriptionDisconnected:
+    'Veuillez scanner un QR code ou vous connectez pour continuer.',
 };
