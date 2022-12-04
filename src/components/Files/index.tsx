@@ -327,7 +327,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     Action.SHOW_QRCODE,
     Action.EDIT_ACCESS,
     Action.EDIT_FILENAME,
-    Action.SHOW_QRCODE,
+    Action.DELETE_FILE,
   ].filter((action) => isAuthorized(action));
 
   if (permissions.length > 0) {
@@ -352,6 +352,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
               onClick={() => {
                 modalDispatch({
                   type: Action.EDIT_ACCESS,
+                  file: record,
                 });
               }}
             />

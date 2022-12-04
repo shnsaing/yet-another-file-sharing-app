@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Drawer, Layout, Menu, MenuProps, MenuTheme } from 'antd';
 import { MenuMode } from 'rc-menu/lib/interface';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { WithTranslation } from 'react-i18next';
 import { MenuOutlined } from '@ant-design/icons';
 
@@ -14,6 +14,7 @@ const { Header } = Layout;
 
 const Navbar: React.FC = ({ t }: WithTranslation) => {
   const [openDrawer, setOpenDrawer] = useState(false);
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -27,7 +28,7 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
       menu.push(
         {
           label: 'Administration',
-          key: '/admin/users',
+          key: '/admin',
         },
         {
           label: t('menu.logout'),
@@ -50,7 +51,7 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
     return (
       <Menu
         theme={theme as MenuTheme}
-        defaultSelectedKeys={['/']}
+        selectedKeys={[pathname]}
         onClick={menuOnClick}
         mode={mode as MenuMode}
         items={getMenu()}

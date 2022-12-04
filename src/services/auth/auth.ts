@@ -4,36 +4,39 @@ export enum Role {
   ADMIN = 'ROLE_ADMIN',
 }
 
-export enum ModalAction {
-  CLOSE_MODAL,
-}
-
 export enum FileAction {
-  UPLOAD_FILE,
-  CREATE_FOLDER,
-  DELETE_FILE,
-  EDIT_ACCESS,
-  EDIT_FILENAME,
-  SHOW_FILE,
-  SHOW_QRCODE,
+  UPLOAD_FILE = 'UPLOAD_FILE',
+  CREATE_FOLDER = 'CREATE_FOLDER',
+  DELETE_FILE = 'DELETE_FILE',
+  EDIT_ACCESS = 'EDIT_ACCESS',
+  EDIT_FILENAME = 'EDIT_FILENAME',
+  SHOW_FILE = 'SHOW_FILE',
+  SHOW_QRCODE = 'SHOW_QRCODE',
 }
 
 export enum OperationAction {
-  CREATE_OPERATION,
-  DELETE_OPERATION,
-  MODIFY_OPERATION,
+  CREATE_OPERATION = 'CREATE_OPERATION',
+  DELETE_OPERATION = 'DELETE_OPERATION',
+  MODIFY_OPERATION = 'MODIFY_OPERATION',
 }
 
 export enum UserAction {
-  CREATE_USER,
-  DELETE_USER,
-  MODIFY_USER,
-  READ_USER,
+  CREATE_USER = 'CREATE_USER',
+  DELETE_USER = 'DELETE_USER',
+  MODIFY_USER = 'MODIFY_USER',
+}
+
+export enum ModalAction {
+  CLOSE_MODAL = 'CLOSE_MODAL',
 }
 
 export type Action = FileAction | OperationAction | UserAction | ModalAction;
 
-const permissions = {
+const permissions: {
+  [key in FileAction | OperationAction | UserAction | ModalAction]:
+    | Role[]
+    | null;
+} = {
   [FileAction.UPLOAD_FILE]: [Role.CLIENT, Role.ADMIN],
   [FileAction.CREATE_FOLDER]: [Role.CLIENT, Role.ADMIN],
   [FileAction.DELETE_FILE]: [Role.CLIENT, Role.ADMIN],
@@ -47,9 +50,10 @@ const permissions = {
   [UserAction.CREATE_USER]: [Role.ADMIN],
   [UserAction.DELETE_USER]: [Role.ADMIN],
   [UserAction.MODIFY_USER]: [Role.ADMIN],
-  [UserAction.READ_USER]: [Role.ADMIN],
+  [ModalAction.CLOSE_MODAL]: null,
 };
 
+console.log(permissions);
 export default permissions;
 
 export const isAuthorized = (action: Action) => {
