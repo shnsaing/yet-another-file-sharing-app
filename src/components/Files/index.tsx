@@ -46,6 +46,7 @@ import {
   isAuthorized,
   ModalAction,
 } from '../../services/auth/auth';
+import { useTablePageSize } from '../../hooks/useTablePageSize';
 
 import '../../style.less';
 
@@ -64,7 +65,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const operationToken = params.operationToken as string;
   const folderId = params.folderId;
 
-  const [pageSize, setPageSize] = useState(7);
+  const pageSize = useTablePageSize();
   const [paddingTop, setPaddingTop] = useState(56);
   const [filteredInfo, setFilteredInfo] = useState<
     Record<string, FilterValue | null>
@@ -99,7 +100,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         return Object.assign(file, { key: i++, name: file.path, type, path });
       });
       const data = folders.concat(files);
-      setPaddingTop(data.length > pageSize ? 0 : 56);
       return { root: folder.id, data };
     } catch (error) {
       console.error(error);
@@ -117,6 +117,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (folders) {
+      setPaddingTop(folders.data.length > pageSize ? 0 : 56);
+    }
+  }, [folders, pageSize]);
 
   let location = useLocation();
 
@@ -487,7 +493,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         pagination={{
           pageSize: pageSize,
           hideOnSinglePage: true,
-          position: ['topRight', 'bottomRight'],
+          position: ['topRight'],
         }}
         locale={{ emptyText: t('nodata') }}
         size="middle"

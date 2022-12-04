@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
 import { FilterValue, SorterResult } from 'antd/lib/table/interface';
-import React, { FC, useReducer, useState } from 'react';
+import React, { FC, useEffect, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
@@ -21,6 +21,7 @@ import { getFormattedDate } from '../../services/utils';
 import Modal from '../Modal';
 import ModalForm from '../Modal/ModalForm';
 import User from './User';
+import { useTablePageSize } from '../../hooks/useTablePageSize';
 
 import '../../style.less';
 
@@ -39,14 +40,11 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
   dataManager,
   t,
 }) => {
-  const [pageSize, setPageSize] = useState(7);
+  const pageSize = useTablePageSize();
   const [paddingTop, setPaddingTop] = useState(56);
 
   const getUsers = async () => {
     const users = await dataManager.getUsers();
-    if (users.length > pageSize) {
-      setPaddingTop(0);
-    }
     return users.map((user, i) => {
       return Object.assign(user, { key: i });
     });
@@ -62,6 +60,12 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (users) {
+      setPaddingTop(users.length > pageSize ? 0 : 56);
+    }
+  }, [users, pageSize]);
 
   const [modalFormData, setModalFormData] = useState<any | null>(null);
 
@@ -285,7 +289,7 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
         pagination={{
           pageSize: pageSize,
           hideOnSinglePage: true,
-          position: ['topRight', 'bottomRight'],
+          position: ['topRight'],
         }}
         locale={{ emptyText: t('nodata') }}
         size="middle"
