@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react';
 import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
 import { WithTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 
 import withTranslation from '../../hoc/withTranslation';
@@ -81,10 +81,6 @@ const LoginPage: FC = ({
             <Button type="primary" htmlType="submit" loading={isLoading}>
               {t('login.submit')}
             </Button>
-            <Divider />
-            <Link to="/forgot-password" className="active">
-              {t('forgotPassword')}
-            </Link>
           </Row>
         </Form>
       </Card>

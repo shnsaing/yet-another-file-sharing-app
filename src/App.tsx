@@ -51,10 +51,6 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: 'forgot-password',
-        element: <div>forgotpass</div>,
-      },
-      {
         path: ':operationToken',
         element: <FilesPage />,
       },
@@ -66,56 +62,17 @@ const router = createBrowserRouter([
   },
   {
     path: 'admin',
-    element: <DefaultLayout />,
+    element: (
+      <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+        <DefaultLayout />
+      </ProtectedRoute>
+    ),
     children: [
+      { index: true, element: <UsersPage /> },
       {
         path: 'users',
-        element: (
-          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
-            <UsersPage />
-          </ProtectedRoute>
-        ),
+        element: <UsersPage />,
       },
-      {
-        path: 'user/:id',
-        element: (
-          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
-            <div />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'operations',
-        element: (
-          <ProtectedRoute rolesAllowed={[Role.CLIENT, Role.ADMIN]}>
-            <div />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'operation/id',
-        element: (
-          <ProtectedRoute rolesAllowed={[Role.CLIENT, Role.ADMIN]}>
-            <div />
-          </ProtectedRoute>
-        ),
-      },
-      // {
-      //   path: 'clients',
-      //   element: (
-      //     <ProtectedRoute rolesAllowed={[Role.USER, Role.CLIENT, Role.ADMIN]}>
-      //       <div />
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: 'client/:id',
-      //   element: (
-      //     <ProtectedRoute rolesAllowed={[Role.USER, Role.CLIENT, Role.ADMIN]}>
-      //       <div />
-      //     </ProtectedRoute>
-      //   ),
-      // },
     ],
   },
   {
