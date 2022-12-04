@@ -54,7 +54,6 @@ export const showErrorNotification = (error: Error | any, t: TFunction) => {
     message: t('notification.error.title'),
     description: description,
   });
-  console.error(error);
 };
 
 export const showSuccesNotification = (message: string, t: TFunction) => {

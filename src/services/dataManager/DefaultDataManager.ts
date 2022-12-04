@@ -103,7 +103,7 @@ export class DefaultDataManager implements DataManager {
       const response = await this.axios.post('/api/folders', {
         name,
         parent,
-        operation: operationToken,
+        operation: `/api/operations/${operationToken}`,
       });
       console.log(response);
     } catch (err) {

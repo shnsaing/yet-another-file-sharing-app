@@ -24,7 +24,7 @@ import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
 import { FilterValue, SorterResult } from 'antd/lib/table/interface';
 import React, { FC, useEffect, useReducer, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 
@@ -245,21 +245,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
   };
 
-  const deleteFile = (file: FileType) => {
-    let promise;
-    if (file['@type'] === Type.FOLDER) {
-      promise = dataManager.deleteFolder(operationToken, file);
-    } else {
-      promise = dataManager.deleteFile(operationToken, file);
-    }
-    promise
-      .then(() => {
-        showSuccesNotification('resourceDeleted', t);
-        refetch();
-      })
-      .catch((e) => showErrorNotification(e, t));
-  };
-
   const columns: ColumnsType<FileType> = [
     {
       key: 'name',
@@ -315,6 +300,26 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
   ];
 
+  const deleteFile = useMutation(
+    (file: FileType): any => {
+      if (file['@type'] === Type.FOLDER) {
+        return dataManager.deleteFolder(operationToken, file);
+      } else {
+        return dataManager.deleteFile(operationToken, file);
+      }
+    },
+    {
+      onSuccess: () => {
+        showSuccesNotification('resourceDeleted', t);
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
   /**
    * Add actions
    */
@@ -367,7 +372,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
               title={t('confirm.title')}
               okText={t('confirm.ok')}
               cancelText={t('confirm.cancel')}
-              onConfirm={() => deleteFile(record)}
+              onConfirm={() => deleteFile.mutate(record)}
             >
               <DeleteOutlined className="delete" />
             </Popconfirm>
@@ -377,23 +382,26 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     });
   }
 
-  const fileUpload = (options: any) => {
-    const data = new FormData();
-    data.set('operationID', operationToken);
-    data.set('folderID', folders?.root);
-    data.set('file', options.file, options.file.name);
-    data.set('name', options.file.name);
-    dataManager
-      .uploadFile(data)
-      .then(() => {
+  const fileUpload = useMutation(
+    (options: any): any => {
+      const data = new FormData();
+      data.set('operationID', operationToken);
+      data.set('folderID', folders?.root);
+      data.set('file', options.file, options.file.name);
+      data.set('name', options.file.name);
+      return dataManager.uploadFile(data);
+    },
+    {
+      onSuccess: () => {
         showSuccesNotification('fileImported', t);
         refetch();
-      })
-      .catch((e) => {
+      },
+      onError: (e) => {
         console.error(e);
         showErrorNotification(e, t);
-      });
-  };
+      },
+    }
+  );
 
   /**
    * New file/folder buttons
@@ -418,7 +426,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   if (isAuthorized(Action.UPLOAD_FILE)) {
     items.push({
       label: (
-        <Upload showUploadList={false} customRequest={fileUpload}>
+        <Upload showUploadList={false} customRequest={fileUpload.mutate}>
           <UploadOutlined /> {t('file.upload')}
         </Upload>
       ),
@@ -432,6 +440,22 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     });
   };
 
+  const createDirectory = useMutation(
+    (): any => {
+      return dataManager.createDirectory(operationToken, {
+        name: modalFormData.directoryName,
+        parent: folders?.root,
+      });
+    },
+    {
+      onSuccess: refetch,
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
   const modalOnOk = async () => {
     if (modalState.action && modalFormData) {
       switch (modalState.action) {
@@ -442,15 +466,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           refetch();
           break;
         case Action.CREATE_FOLDER:
-          try {
-            await dataManager.createDirectory(operationToken, {
-              name: modalFormData.directoryName,
-              parent: folders?.root,
-            });
-            refetch();
-          } catch (e) {
-            showErrorNotification(e, t);
-          }
+          createDirectory.mutate();
           break;
       }
     }
