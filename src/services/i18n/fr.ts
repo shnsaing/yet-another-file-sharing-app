@@ -35,6 +35,7 @@ export default {
     directoryName: 'Nom du dossier',
     invalidInput: 'Veuillez renseigner une valeur.',
     roles: 'Rôle(s)',
+    users: 'Utilisateur(s)',
   },
   confirm: {
     title: 'Êtes-vous sûr?',
@@ -61,8 +62,15 @@ export default {
     roles: 'Rôles',
     new: 'Nouvel utilisateur',
   },
+  operation: {
+    new: 'Nouvelle opération',
+  },
   welcome: 'Bienvenue sur Kiken.',
   appDescriptionConnected: 'Veuillez scanner un QR code pour continuer.',
   appDescriptionDisconnected:
     'Veuillez scanner un QR code ou vous connectez pour continuer.',
+  admin: {
+    usersTab: 'Utilisateurs',
+    operationsTab: 'Opérations',
+  },
 };

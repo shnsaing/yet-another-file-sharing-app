@@ -53,7 +53,6 @@ const permissions: {
   [ModalAction.CLOSE_MODAL]: null,
 };
 
-console.log(permissions);
 export default permissions;
 
 export const isAuthorized = (action: Action) => {

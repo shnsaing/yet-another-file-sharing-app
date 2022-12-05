@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePageSize } from './usePageSize';
 
-export const useTablePageSize = () => {
+export const useTablePageSize = (minusExtra: number) => {
   const [width, height] = usePageSize();
 
   const getPageSize = () => {
@@ -10,13 +10,13 @@ export const useTablePageSize = () => {
     if (width > 768) {
       // remove padding
       pageSize -= 32;
-      if (width < 959) {
-        // in tablet mode, <tr> have 70px in height
-        return pageSize / 70;
-      }
+      // if (width < 959) {
+      //   // in tablet mode, <tr> have 70px in height
+      //   return Math.trunc((pageSize - minusExtra) / 70);
+      // }
     }
     // divide by <tr> height
-    return pageSize / 48;
+    return Math.trunc((pageSize - minusExtra) / 48);
   };
 
   const [pageSize, setPageSize] = useState(getPageSize());

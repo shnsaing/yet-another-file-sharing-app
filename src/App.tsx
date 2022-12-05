@@ -10,7 +10,7 @@ import FilesPage from './components/Files';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
-import UsersPage from './components/Users';
+import AdministrationPage from './components/Administration';
 import { Role } from './services/auth/auth';
 
 type ProtectedRouteProps = {
@@ -67,13 +67,7 @@ const router = createBrowserRouter([
         <DefaultLayout />
       </ProtectedRoute>
     ),
-    children: [
-      { index: true, element: <UsersPage /> },
-      {
-        path: 'users',
-        element: <UsersPage />,
-      },
-    ],
+    children: [{ index: true, element: <AdministrationPage /> }],
   },
   {
     path: 'login',

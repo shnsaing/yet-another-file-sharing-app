@@ -1,27 +1,25 @@
-import { Button, Dropdown, Popconfirm, Table, Tag, Tooltip } from 'antd';
-import type { MenuProps } from 'antd';
+import React, { FC, useReducer, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Popconfirm, Tag, Tooltip } from 'antd';
 import {
   EditOutlined,
-  PlusOutlined,
   UserAddOutlined,
   UserDeleteOutlined,
 } from '@ant-design/icons';
-import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
-import { FilterValue, SorterResult } from 'antd/lib/table/interface';
-import React, { FC, useEffect, useReducer, useState } from 'react';
-import { WithTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import type { MenuProps } from 'antd';
+import type { ColumnsType } from 'antd/lib/table';
+import type { WithTranslation } from 'react-i18next';
 
+import TableView from '../TableView';
+import ModalForm from '../Modal/ModalForm';
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { Role } from '../../services/auth/auth';
+import { ModalAction, Role } from '../../services/auth/auth';
 import { getFormattedDate } from '../../services/utils';
-import Modal from '../Modal';
-import ModalForm from '../Modal/ModalForm';
-import User from './User';
-import { useTablePageSize } from '../../hooks/useTablePageSize';
+import { UserAction as Action } from '../../services/auth/auth';
+import type User from '../../types/User';
 
 import '../../style.less';
 
@@ -29,20 +27,9 @@ interface UserType extends User {
   key: React.Key;
 }
 
-enum Action {
-  CLOSE_MODAL,
-  CREATE,
-  UPDATE,
-  DELETE,
-}
-
-const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
-  dataManager,
-  t,
-}) => {
-  const pageSize = useTablePageSize();
-  const [paddingTop, setPaddingTop] = useState(56);
-
+const UsersPage: FC<
+  WithTranslation & WithDataManagerProps & { inTab?: boolean }
+> = ({ dataManager, t, inTab }) => {
   const getUsers = async () => {
     const users = await dataManager.getUsers();
     return users.map((user, i) => {
@@ -61,12 +48,6 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (users) {
-      setPaddingTop(users.length > pageSize ? 0 : 56);
-    }
-  }, [users, pageSize]);
-
   const [modalFormData, setModalFormData] = useState<any | null>(null);
 
   const handleFormValues = (changedValues: any, allValues: any) => {
@@ -75,9 +56,9 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
-      case Action.CREATE:
+      case Action.CREATE_USER:
         return {
-          action: Action.CREATE,
+          action: Action.CREATE_USER,
           content: (
             <ModalForm
               inputs={[
@@ -90,9 +71,9 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
           ),
           showModal: true,
         };
-      case Action.UPDATE:
+      case Action.MODIFY_USER:
         return {
-          action: Action.UPDATE,
+          action: Action.MODIFY_USER,
           content: (
             <ModalForm
               inputs={[
@@ -109,12 +90,12 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
           ),
           showModal: true,
         };
-      case Action.DELETE:
+      case Action.DELETE_USER:
         return {
-          action: Action.DELETE,
+          action: Action.DELETE_USER,
           showModal: true,
         };
-      case Action.CLOSE_MODAL:
+      case ModalAction.CLOSE_MODAL:
       default:
         setModalFormData(null);
         return {
@@ -198,7 +179,7 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
             className="edit"
             onClick={() => {
               modalDispatch({
-                type: Action.UPDATE,
+                type: Action.MODIFY_USER,
                 user: record,
               });
             }}
@@ -218,20 +199,20 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const hideModal = () => {
     modalDispatch({
-      type: Action.CLOSE_MODAL,
+      type: ModalAction.CLOSE_MODAL,
     });
   };
 
   const modalOnOk = async () => {
     if (modalState.action && modalFormData) {
       switch (modalState.action) {
-        case Action.CREATE:
+        case Action.CREATE_USER:
           refetch();
           break;
-        case Action.UPDATE:
+        case Action.MODIFY_USER:
           refetch();
           break;
-        case Action.DELETE:
+        case Action.DELETE_USER:
           refetch();
           break;
       }
@@ -245,7 +226,7 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
         <div
           onClick={() => {
             modalDispatch({
-              type: Action.CREATE,
+              type: Action.CREATE_USER,
             });
           }}
         >
@@ -256,54 +237,20 @@ const UsersPage: FC<WithTranslation & WithDataManagerProps> = ({
     },
   ];
 
-  const handleTableChange = (
-    pagination: TablePaginationConfig,
-    filters: Record<string, FilterValue>,
-    sorter: SorterResult<UserType>,
-    extra: { currentDataSource: []; action: any }
-  ) => {
-    if (extra.currentDataSource.length > pageSize) {
-      setPaddingTop(0);
-    } else {
-      setPaddingTop(56);
-    }
-  };
-
   return (
-    <div className="users-container">
-      <Dropdown
-        className="actions-container"
-        menu={{ items }}
-        trigger={['click']}
-      >
-        <Button size="small" icon={<PlusOutlined />}>
-          {t('new')}
-        </Button>
-      </Dropdown>
-      <Table
-        style={{ paddingTop }}
-        columns={columns}
-        dataSource={users}
-        scroll={{ x: '100%' }}
-        loading={isFetching}
-        pagination={{
-          pageSize: pageSize,
-          hideOnSinglePage: true,
-          position: ['topRight'],
-        }}
-        locale={{ emptyText: t('nodata') }}
-        size="middle"
-        onChange={handleTableChange}
-        showSorterTooltip={false}
-      />
-      <Modal
-        showModal={modalState.showModal}
-        onOk={modalOnOk}
-        onCancel={hideModal}
-      >
-        {modalState.content}
-      </Modal>
-    </div>
+    <TableView
+      data={users}
+      isFetching={isFetching}
+      actionsItems={items}
+      columns={columns}
+      formData={modalFormData}
+      setFormData={setModalFormData}
+      modalOnOkHandler={modalOnOk}
+      hideModalHandler={hideModal}
+      showModal={modalState.showModal}
+      modalContent={modalState.content}
+      minusTabSize={inTab}
+    />
   );
 };
 

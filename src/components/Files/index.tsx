@@ -1,12 +1,6 @@
-import {
-  Button,
-  Dropdown,
-  Popconfirm,
-  Table,
-  Tag,
-  Tooltip,
-  Upload,
-} from 'antd';
+import React, { FC, useEffect, useReducer, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Popconfirm, Tag, Tooltip, Upload } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DeleteOutlined,
@@ -15,27 +9,22 @@ import {
   FileOutlined,
   FolderAddOutlined,
   FolderOutlined,
-  PlusOutlined,
   QrcodeOutlined,
   UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
-import { FilterValue, SorterResult } from 'antd/lib/table/interface';
-import React, { FC, useEffect, useReducer, useState } from 'react';
-import { WithTranslation } from 'react-i18next';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import type { ColumnsType } from 'antd/lib/table';
+import type { FilterValue } from 'antd/lib/table/interface';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import type { WithTranslation } from 'react-i18next';
 
+import TableView from '../TableView';
+import ModalForm from '../Modal/ModalForm';
 import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import Modal from '../Modal';
-import ModalForm from '../Modal/ModalForm';
-import type File from './File';
-import { Type } from './File';
 import {
   getFormattedDate,
   showErrorNotification,
@@ -46,7 +35,8 @@ import {
   isAuthorized,
   ModalAction,
 } from '../../services/auth/auth';
-import { useTablePageSize } from '../../hooks/useTablePageSize';
+import { Type } from '../../types/File';
+import type File from '../../types/File';
 
 import '../../style.less';
 
@@ -65,8 +55,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const operationToken = params.operationToken as string;
   const folderId = params.folderId;
 
-  const pageSize = useTablePageSize();
-  const [paddingTop, setPaddingTop] = useState(56);
   const [filteredInfo, setFilteredInfo] = useState<
     Record<string, FilterValue | null>
   >({});
@@ -118,12 +106,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (folders) {
-      setPaddingTop(folders.data.length > pageSize ? 0 : 56);
-    }
-  }, [folders, pageSize]);
-
   let location = useLocation();
 
   useEffect(() => {
@@ -147,11 +129,32 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     setModalFormData(allValues);
   };
 
+  let [users, setUsers] = useState([]);
+  if (isAuthorized(Action.EDIT_ACCESS)) {
+    useQuery(
+      ['users'],
+      async () => {
+        return await dataManager.getUsersByOperationToken(operationToken);
+      },
+      {
+        onSuccess: setUsers,
+        onError: console.error,
+        refetchOnWindowFocus: false,
+      }
+    );
+  }
+
   const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
       case Action.EDIT_ACCESS:
         return {
           action: Action.EDIT_ACCESS,
+          content: (
+            <ModalForm
+              inputs={[{ name: 'users', possibleValues: users }]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.EDIT_FILENAME:
@@ -474,57 +477,19 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     hideModal();
   };
 
-  const handleTableChange = (
-    pagination: TablePaginationConfig,
-    filters: Record<string, FilterValue>,
-    sorter: SorterResult<FileType>,
-    extra: { currentDataSource: []; action: any }
-  ) => {
-    setFilteredInfo(filters);
-    if (extra.currentDataSource.length > pageSize) {
-      setPaddingTop(0);
-    } else {
-      setPaddingTop(56);
-    }
-  };
-
   return (
-    <div className="files-container">
-      {items.length > 0 && (
-        <Dropdown
-          className="actions-container"
-          menu={{ items }}
-          trigger={['click']}
-        >
-          <Button size="small" icon={<PlusOutlined />}>
-            {t('new')}
-          </Button>
-        </Dropdown>
-      )}
-      <Table
-        style={{ paddingTop }}
-        columns={columns}
-        dataSource={folders?.data}
-        scroll={{ x: '100%' }}
-        loading={isFetching}
-        pagination={{
-          pageSize: pageSize,
-          hideOnSinglePage: true,
-          position: ['topRight'],
-        }}
-        locale={{ emptyText: t('nodata') }}
-        size="middle"
-        onChange={handleTableChange}
-        showSorterTooltip={false}
-      />
-      <Modal
-        showModal={modalState.showModal}
-        onOk={modalOnOk}
-        onCancel={hideModal}
-      >
-        {modalState.content}
-      </Modal>
-    </div>
+    <TableView
+      data={folders?.data}
+      isFetching={isFetching}
+      actionsItems={items}
+      columns={columns}
+      formData={modalFormData}
+      setFormData={setModalFormData}
+      modalOnOkHandler={modalOnOk}
+      hideModalHandler={hideModal}
+      showModal={modalState.showModal}
+      modalContent={modalState.content}
+    />
   );
 };
 

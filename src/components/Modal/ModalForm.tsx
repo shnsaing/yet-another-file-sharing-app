@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Input, Select } from 'antd';
-import { WithTranslation } from 'react-i18next';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 
@@ -9,8 +9,8 @@ import './ModalForm.less';
 type Input = {
   name: string;
   value?: string;
-  possibleValues?: string[];
-  values?: string[];
+  possibleValues?: any[];
+  values?: any[];
 };
 
 interface ModalFormProps extends WithTranslation {

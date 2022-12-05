@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Modal } from 'antd';
-import { WithTranslation } from 'react-i18next';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 

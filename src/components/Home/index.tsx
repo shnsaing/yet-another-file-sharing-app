@@ -1,7 +1,7 @@
-import { Button, Typography } from 'antd';
 import React, { FC } from 'react';
-import { WithTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { Button, Typography } from 'antd';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 

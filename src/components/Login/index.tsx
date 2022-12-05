@@ -1,8 +1,8 @@
 import React, { FC, useEffect } from 'react';
-import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
-import { WithTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
+import { Button, Card, Form, Input, notification, Row } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 import withDataManager, {

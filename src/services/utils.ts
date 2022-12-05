@@ -20,7 +20,6 @@ export const buildAxiosInstance = (config: CreateAxiosDefaults) => {
   axiosClient.interceptors.response.use(
     (response) => response,
     (error) => {
-      console.log(error);
       const token = sessionStorage.getItem('token');
       const refreshToken = sessionStorage.getItem('refresh_token');
       if (token && refreshToken) {

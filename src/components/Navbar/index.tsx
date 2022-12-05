@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Drawer, Layout, Menu, MenuProps, MenuTheme } from 'antd';
 import { MenuMode } from 'rc-menu/lib/interface';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { WithTranslation } from 'react-i18next';
 import { MenuOutlined } from '@ant-design/icons';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 import { useIsMobile } from '../../hooks/useIsMobile';

@@ -1,4 +1,4 @@
-import { Role } from '../../services/auth/auth';
+import type { Role } from '../services/auth/auth';
 
 type User = {
   '@id': string;

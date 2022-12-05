@@ -1,8 +1,8 @@
 import { AxiosInstance } from 'axios';
 
 import { DataManager } from './DataManager';
-import type File from '../../components/Files/File';
-import User from '../../components/Users/User';
+import type File from '../../types/File';
+import type User from '../../types/User';
 
 export class DefaultDataManager implements DataManager {
   private readonly axios: AxiosInstance;
@@ -114,6 +114,26 @@ export class DefaultDataManager implements DataManager {
   async getUsers(): Promise<User[]> {
     try {
       const response: any = await this.axios.get('/api/users');
+      return response.data['hydra:member'];
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async getUsersByOperationToken(operationToken: string): Promise<User[]> {
+    try {
+      const response: any = await this.axios.get(
+        `/api/${operationToken}/users`
+      );
+      return response.data['hydra:member'];
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async getOperations(): Promise<any> {
+    try {
+      const response: any = await this.axios.get('/api/operations');
       return response.data['hydra:member'];
     } catch (err) {
       throw new Error(err.response.statusText);
