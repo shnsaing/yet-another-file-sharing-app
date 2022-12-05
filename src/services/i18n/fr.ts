@@ -46,9 +46,25 @@ export default {
   notification: {
     success: {
       title: 'Succès',
-      resourceDeleted: 'La ressource a été correctement supprimée.',
-      fileImported: 'Le fichier a été correctement téléversé.',
-      fileDownloaded: 'Le fichier a été correctement téléchargé.',
+      fileImported: 'Le fichier {{file}} a été correctement téléversé.',
+      fileDownloaded: 'Le fichier {{file}} a été correctement téléchargé.',
+      directoryCreated: 'Le dossier {{directory}} a été créé avec succès.',
+      fileUpdated: 'Le fichier {{file}} a été mis à jour avec succès',
+      folderUpdated: 'Le dossier {{directory}} a été mis à jour avec succès',
+      fileDeleted: 'Le fichier {{file}} a été supprimé avec succès.',
+      folderDeleted: 'Le dossier {{directory}} a été supprimé avec succès.',
+      userCreated: "L'utilisateur {{user}} a été créé avec succès.",
+      userUpdated: "L'utilisateur {{user}} a été mis à jour avec succès.",
+      userDeleted: "L'utilisateur {{user}} a été supprimé avec succès.",
+      operationCreated: "L'opération {{operation}} a été créé avec succès.",
+      operationUpdated:
+        "L'opération {{operation}} a été mise à jour avec succès.",
+      operationDeleted:
+        "L'opération {{operation}} a été supprimée avec succès.",
+      folderAccessUpdated:
+        'Les accès au dossier {{directory}} ont été mis à jour avec succès',
+      fileAccessUpdated:
+        'Les accès au fichier {{file}} ont été mis à jour avec succès',
     },
     error: {
       title: 'Erreur',

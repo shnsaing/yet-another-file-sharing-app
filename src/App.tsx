@@ -47,10 +47,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       {
-        path: 'home',
-        element: <HomePage />,
-      },
-      {
         path: ':operationToken',
         element: <FilesPage />,
       },
@@ -63,11 +59,25 @@ const router = createBrowserRouter([
   {
     path: 'admin',
     element: (
-      <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+      <ProtectedRoute rolesAllowed={[Role.ADMIN, Role.CLIENT]}>
         <DefaultLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <AdministrationPage /> }],
+    children: [
+      { index: true, element: <AdministrationPage /> },
+      {
+        path: 'operations',
+        element: <AdministrationPage />,
+      },
+      {
+        path: 'users',
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+            <AdministrationPage selectedKey="users" />
+          </ProtectedRoute>
+        ),
+      },
+    ],
   },
   {
     path: 'login',

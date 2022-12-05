@@ -80,7 +80,7 @@ const TableView: FC<TableViewProps> = (props) => {
       />
       <Modal
         showModal={props.showModal}
-        onOk={props.modalOnOkHandler}
+        onOk={() => props.modalOnOkHandler()}
         onCancel={props.hideModalHandler}
       >
         {props.modalContent}

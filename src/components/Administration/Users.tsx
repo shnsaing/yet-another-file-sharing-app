@@ -1,6 +1,6 @@
 import React, { FC, useReducer, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Popconfirm, Tag, Tooltip } from 'antd';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { FormInstance, Popconfirm, Tooltip } from 'antd';
 import {
   EditOutlined,
   UserAddOutlined,
@@ -16,8 +16,16 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
-import { ModalAction, Role } from '../../services/auth/auth';
-import { getFormattedDate } from '../../services/utils';
+import {
+  isAuthorized,
+  ModalAction,
+  UserAction,
+} from '../../services/auth/auth';
+import {
+  getFormattedDate,
+  showErrorNotification,
+  showSuccesNotification,
+} from '../../services/utils';
 import { UserAction as Action } from '../../services/auth/auth';
 import type User from '../../types/User';
 
@@ -48,10 +56,41 @@ const UsersPage: FC<
     refetchOnWindowFocus: false,
   });
 
+  const getOperations = async () => {
+    const ops = await dataManager.getOperations();
+    return ops.map((op, i) => {
+      return Object.assign(op, { key: i });
+    });
+  };
+
+  const { data: operations } = useQuery(['operations'], getOperations, {
+    onError: (e) => {
+      console.error(e);
+    },
+    refetchOnWindowFocus: false,
+  });
+
   const [modalFormData, setModalFormData] = useState<any | null>(null);
 
   const handleFormValues = (changedValues: any, allValues: any) => {
     setModalFormData(allValues);
+  };
+
+  const modalOnOk = async (form?: FormInstance) => {
+    const formData = form?.getFieldsValue();
+    if (modalState.action && (modalFormData || formData)) {
+      switch (modalState.action) {
+        case Action.CREATE_USER:
+          createUser.mutate();
+          refetch();
+          break;
+        case Action.MODIFY_USER:
+          editUser.mutate();
+          refetch();
+          break;
+      }
+    }
+    hideModal();
   };
 
   const modalReducer = (prevState: any, action: any) => {
@@ -63,10 +102,17 @@ const UsersPage: FC<
             <ModalForm
               inputs={[
                 { name: 'email' },
-                { name: 'roles', possibleValues: Object.values(Role) },
                 { name: 'password' },
+                {
+                  name: 'operationName',
+                  possibleValues: operations
+                    ? operations.map((op) => op.name)
+                    : [],
+                  multiple: false,
+                },
               ]}
               onFormValueChange={handleFormValues}
+              submit={modalOnOk}
             />
           ),
           showModal: true,
@@ -74,25 +120,17 @@ const UsersPage: FC<
       case Action.MODIFY_USER:
         return {
           action: Action.MODIFY_USER,
+          selectedUser: action.user,
           content: (
             <ModalForm
               inputs={[
                 { name: 'email', value: action.user.email },
-                {
-                  name: 'roles',
-                  values: action.user.roles,
-                  possibleValues: Object.values(Role),
-                },
                 { name: 'password' },
               ]}
               onFormValueChange={handleFormValues}
+              submit={modalOnOk}
             />
           ),
-          showModal: true,
-        };
-      case Action.DELETE_USER:
-        return {
-          action: Action.DELETE_USER,
           showModal: true,
         };
       case ModalAction.CLOSE_MODAL:
@@ -109,6 +147,22 @@ const UsersPage: FC<
     content: null,
     showModal: false,
   });
+
+  const deleteUser = useMutation(
+    (user: UserType): any => {
+      return dataManager.deleteUser(user);
+    },
+    {
+      onSuccess: (user: UserType) => {
+        showSuccesNotification('userDeleted', t, { user: user.email });
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
 
   const columns: ColumnsType<UserType> = [
     {
@@ -132,66 +186,35 @@ const UsersPage: FC<
       responsive: ['md'],
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      defaultSortOrder: 'descend',
       render: getFormattedDate,
-    },
-    {
-      key: 'updatedAt',
-      title: t('updatedAt'),
-      dataIndex: 'updatedAt',
-      responsive: ['md'],
-      sorter: (a, b) =>
-        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
-      render: getFormattedDate,
-    },
-    {
-      key: 'role',
-      title: t('user.roles'),
-      dataIndex: 'roles',
-      responsive: ['md'],
-      filters: [
-        {
-          text: Role.ADMIN,
-          value: Role.ADMIN,
-        },
-        {
-          text: Role.CLIENT,
-          value: Role.CLIENT,
-        },
-        {
-          text: Role.USER,
-          value: Role.USER,
-        },
-      ],
-      onFilter: (value: string, record) =>
-        !!record.roles.find((role) => role === value),
-      render: (value) => {
-        return value.map((role: Role, i: number) => (
-          <Tag key={i}>{t(role)}</Tag>
-        ));
-      },
     },
     {
       key: 'actions',
       title: 'Actions',
       render: (value, record) => (
         <>
-          <EditOutlined
-            className="edit"
-            onClick={() => {
-              modalDispatch({
-                type: Action.MODIFY_USER,
-                user: record,
-              });
-            }}
-          />
-          <Popconfirm
-            title={t('confirm.title')}
-            okText={t('confirm.ok')}
-            cancelText={t('confirm.cancel')}
-            onConfirm={() => refetch()}
-          >
-            <UserDeleteOutlined className="delete" />
-          </Popconfirm>
+          {isAuthorized(UserAction.MODIFY_USER) && (
+            <EditOutlined
+              className="edit"
+              onClick={() => {
+                modalDispatch({
+                  type: Action.MODIFY_USER,
+                  user: record,
+                });
+              }}
+            />
+          )}
+          {isAuthorized(UserAction.DELETE_USER) && (
+            <Popconfirm
+              title={t('confirm.title')}
+              okText={t('confirm.ok')}
+              cancelText={t('confirm.cancel')}
+              onConfirm={() => deleteUser.mutate(record)}
+            >
+              <UserDeleteOutlined className="delete" />
+            </Popconfirm>
+          )}
         </>
       ),
     },
@@ -203,25 +226,52 @@ const UsersPage: FC<
     });
   };
 
-  const modalOnOk = async () => {
-    if (modalState.action && modalFormData) {
-      switch (modalState.action) {
-        case Action.CREATE_USER:
-          refetch();
-          break;
-        case Action.MODIFY_USER:
-          refetch();
-          break;
-        case Action.DELETE_USER:
-          refetch();
-          break;
-      }
-    }
-    hideModal();
-  };
-
-  const items: MenuProps['items'] = [
+  const createUser = useMutation(
+    (): any => {
+      const { email, password, operationName } = modalFormData;
+      return dataManager.createUser({
+        email,
+        password,
+        operation: (operations as any[]).find(
+          (op) => op.name === operationName
+        )['@id'],
+      });
+    },
     {
+      onSuccess: () => {
+        showSuccesNotification('userCreated', t, { user: modalFormData.email });
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
+  const editUser = useMutation(
+    (): any => {
+      const { email, password } = modalFormData;
+      return dataManager.updateUser(modalState.selectedUser, {
+        email,
+        password,
+      });
+    },
+    {
+      onSuccess: () => {
+        showSuccesNotification('userUpdated', t, { user: modalFormData.email });
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
+  const items: MenuProps['items'] = [];
+  if (isAuthorized(UserAction.CREATE_USER)) {
+    items.push({
       label: (
         <div
           onClick={() => {
@@ -234,8 +284,8 @@ const UsersPage: FC<
         </div>
       ),
       key: 'new_user',
-    },
-  ];
+    });
+  }
 
   return (
     <TableView

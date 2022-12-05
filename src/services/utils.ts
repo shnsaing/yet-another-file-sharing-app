@@ -55,10 +55,14 @@ export const showErrorNotification = (error: Error | any, t: TFunction) => {
   });
 };
 
-export const showSuccesNotification = (message: string, t: TFunction) => {
+export const showSuccesNotification = (
+  message: string,
+  t: TFunction,
+  options?: any
+) => {
   notification.success({
     message: t('notification.success.title'),
-    description: t(`notification.success.${message}`),
+    description: t(`notification.success.${message}`, options),
   });
 };
 

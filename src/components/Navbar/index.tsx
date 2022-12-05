@@ -7,6 +7,11 @@ import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import {
+  isAuthorized,
+  OperationAction,
+  UserAction,
+} from '../../services/auth/auth';
 
 import './style.less';
 
@@ -25,16 +30,23 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
       key: '/',
     });
     if (sessionStorage.getItem('token')) {
-      menu.push(
-        {
+      const opAuth = Object.values(OperationAction).find((action) =>
+        isAuthorized(action)
+      );
+      const usAuth = Object.values(UserAction).find((action) =>
+        isAuthorized(action)
+      );
+      console.log(opAuth, usAuth, opAuth || usAuth);
+      if (opAuth || usAuth) {
+        menu.push({
           label: 'Administration',
           key: '/admin',
-        },
-        {
-          label: t('menu.logout'),
-          key: '/logout',
-        }
-      );
+        });
+      }
+      menu.push({
+        label: t('menu.logout'),
+        key: '/logout',
+      });
     } else {
       menu.push({
         label: t('menu.login'),

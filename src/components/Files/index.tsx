@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useReducer, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Popconfirm, Tag, Tooltip, Upload } from 'antd';
+import { FormInstance, Popconfirm, Tag, Tooltip, Upload } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DeleteOutlined,
@@ -72,6 +72,19 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     navigate(location.pathname);
   }
 
+  const triggerFileDownload = (file: FileType, url: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
+    }, 100);
+    showSuccesNotification('fileDownloaded', t, { file: file.name });
+  };
+
   const downloadFile = (file: FileType) => {
     dataManager
       .downloadFile(operationToken, file.id)
@@ -81,18 +94,10 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           modalDispatch({
             type: Action.SHOW_FILE,
             imageFile: url,
+            onOk: () => triggerFileDownload(file, url),
           });
         } else {
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = file.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => {
-            window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
-          }, 100);
-          showSuccesNotification('fileDownloaded', t);
+          triggerFileDownload(file, url);
         }
       })
       .catch(console.error);
@@ -131,10 +136,10 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         return Object.assign(file, { key: i++, name: file.path, type, path });
       });
       const data = folders.concat(files);
-      return { root: folder.id, data };
+      return { root: folder, data };
     } catch (error) {
       console.error(error);
-      return { root: folder ? folder.id : null, data: [] };
+      return { root: folder || null, data: [] };
     }
   };
 
@@ -200,15 +205,112 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     );
   }
 
+  const updateAccess = useMutation(
+    (): any => {
+      return dataManager.editFileAccess(
+        operationToken,
+        modalState.selectedFile,
+        modalFormData.users
+      );
+    },
+    {
+      onSuccess: () => {
+        if (Type.FOLDER === modalState.selectedFile['@type']) {
+          showSuccesNotification('folderAccessUpdated', t, {
+            directory: modalState.selectedFile.name,
+          });
+        } else {
+          showSuccesNotification('fileAccessUpdated', t, {
+            file: modalState.selectedFile.name,
+          });
+        }
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
+  const createDirectory = useMutation(
+    (): any => {
+      return dataManager.createDirectory(operationToken, {
+        name: modalFormData.directoryName,
+        parent: folders?.root['@id'],
+      });
+    },
+    {
+      onSuccess: () => {
+        showSuccesNotification('directoryCreated', t, {
+          directory: modalFormData.directoryName,
+        });
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
+  const renameFile = useMutation(
+    (): any => {
+      return dataManager.renameFile(
+        operationToken,
+        modalState.selectedFile,
+        modalFormData.name
+      );
+    },
+    {
+      onSuccess: () => {
+        if (Type.FOLDER === modalState.selectedFile['@type']) {
+          showSuccesNotification('folderUpdated', t, {
+            directory: modalFormData.name,
+          });
+        } else {
+          showSuccesNotification('fileUpdated', t, {
+            file: modalFormData.name,
+          });
+        }
+        refetch();
+      },
+      onError: (e) => {
+        console.error(e);
+        showErrorNotification(e, t);
+      },
+    }
+  );
+
+  const modalOnOk = async (form?: FormInstance) => {
+    const formData = form?.getFieldsValue();
+    if (modalState.action && (modalFormData || formData)) {
+      switch (modalState.action) {
+        case Action.EDIT_ACCESS:
+          updateAccess.mutate();
+          break;
+        case Action.EDIT_FILENAME:
+          renameFile.mutate();
+          break;
+        case Action.CREATE_FOLDER:
+          createDirectory.mutate();
+          break;
+      }
+    }
+    hideModal();
+  };
+
   const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
       case Action.EDIT_ACCESS:
         return {
           action: Action.EDIT_ACCESS,
+          selectedFile: action.file,
           content: (
             <ModalForm
               inputs={[{ name: 'users', possibleValues: users }]}
               onFormValueChange={handleFormValues}
+              submit={modalOnOk}
             />
           ),
           showModal: true,
@@ -216,10 +318,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       case Action.EDIT_FILENAME:
         return {
           action: Action.EDIT_FILENAME,
+          selectedFile: action.file,
           content: (
             <ModalForm
               inputs={[{ name: 'name', value: action.file.name }]}
               onFormValueChange={handleFormValues}
+              submit={modalOnOk}
             />
           ),
           showModal: true,
@@ -231,6 +335,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             <ModalForm
               inputs={[{ name: 'directoryName' }]}
               onFormValueChange={handleFormValues}
+              submit={modalOnOk}
             />
           ),
           showModal: true,
@@ -257,20 +362,25 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             />
           ),
           showModal: true,
+          onOk: action.onOk,
         };
       case ModalAction.CLOSE_MODAL:
       default:
         setModalFormData(null);
         return {
+          selectedFile: null,
           content: null,
           showModal: false,
+          onOk: undefined,
         };
     }
   };
 
   const [modalState, modalDispatch] = useReducer(modalReducer, {
+    selectedFile: null,
     content: null,
     showModal: false,
+    onOk: undefined,
   });
 
   const getNameComponent = (record: FileType) => {
@@ -341,15 +451,19 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
 
   const deleteFile = useMutation(
     (file: FileType): any => {
-      if (file['@type'] === Type.FOLDER) {
+      if (Type.FOLDER === file['@type']) {
         return dataManager.deleteFolder(operationToken, file);
       } else {
         return dataManager.deleteFile(operationToken, file);
       }
     },
     {
-      onSuccess: () => {
-        showSuccesNotification('resourceDeleted', t);
+      onSuccess: (file: FileType) => {
+        if (Type.FOLDER === file['@type']) {
+          showSuccesNotification('folderDeleted', t, { directory: file.name });
+        } else {
+          showSuccesNotification('fileDeleted', t, { file: file.name });
+        }
         refetch();
       },
       onError: (e) => {
@@ -440,14 +554,14 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     (options: any): any => {
       const data = new FormData();
       data.set('operationID', operationToken);
-      data.set('folderID', folders?.root);
+      data.set('folderID', folders?.root.id);
       data.set('file', options.file, options.file.name);
       data.set('name', options.file.name);
       return dataManager.uploadFile(data);
     },
     {
-      onSuccess: () => {
-        showSuccesNotification('fileImported', t);
+      onSuccess: (file: string) => {
+        showSuccesNotification('fileImported', t, { file });
         refetch();
       },
       onError: (e) => {
@@ -494,39 +608,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     });
   };
 
-  const createDirectory = useMutation(
-    (): any => {
-      return dataManager.createDirectory(operationToken, {
-        name: modalFormData.directoryName,
-        parent: folders?.root,
-      });
-    },
-    {
-      onSuccess: refetch,
-      onError: (e) => {
-        console.error(e);
-        showErrorNotification(e, t);
-      },
-    }
-  );
-
-  const modalOnOk = async () => {
-    if (modalState.action && modalFormData) {
-      switch (modalState.action) {
-        case Action.EDIT_ACCESS:
-          refetch();
-          break;
-        case Action.EDIT_FILENAME:
-          refetch();
-          break;
-        case Action.CREATE_FOLDER:
-          createDirectory.mutate();
-          break;
-      }
-    }
-    hideModal();
-  };
-
   return (
     <TableView
       data={folders?.data}
@@ -535,7 +616,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       columns={columns}
       formData={modalFormData}
       setFormData={setModalFormData}
-      modalOnOkHandler={modalOnOk}
+      modalOnOkHandler={modalState.onOk || modalOnOk}
       hideModalHandler={hideModal}
       showModal={modalState.showModal}
       modalContent={modalState.content}

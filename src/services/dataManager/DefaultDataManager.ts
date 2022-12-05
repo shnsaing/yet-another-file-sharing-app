@@ -1,6 +1,7 @@
 import { AxiosInstance } from 'axios';
 
 import { DataManager } from './DataManager';
+import { Type as FileType } from '../../types/File';
 import type File from '../../types/File';
 import type User from '../../types/User';
 import type Operation from '../../types/Operation';
@@ -22,6 +23,7 @@ export class DefaultDataManager implements DataManager {
         token: response.data.token,
         refreshToken: response.data.refresh_token,
         role: response.data.role,
+        operationToken: response.data.operation,
       };
     } catch (err) {
       throw new Error(err.response.statusText);
@@ -76,37 +78,97 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  async deleteFile(operationToken: string, file: File): Promise<any> {
-    try {
-      const response = await this.axios.delete(
-        `/api/${operationToken}/media_objects/${file['id']}`
-      );
-      console.log(response);
-    } catch (err) {
-      throw new Error(err.response.statusText);
-    }
-  }
-
-  async deleteFolder(operationToken: string, folder: File): Promise<any> {
-    try {
-      const response = await this.axios.delete(
-        `/api/${operationToken}/folders/${folder.id}`
-      );
-      console.log(response);
-    } catch (err) {
-      throw new Error(err.response.statusText);
-    }
-  }
-
-  async createDirectory(operationToken: string, data: any): Promise<any> {
+  async createDirectory(operationToken: string, data: any): Promise<boolean> {
     try {
       const { name, parent } = data;
-      const response = await this.axios.post('/api/folders', {
+      await this.axios.post('/api/folders', {
         name,
-        parent,
         operation: `/api/operations/${operationToken}`,
+        parent,
       });
-      console.log(response);
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async deleteFile(operationToken: string, file: File): Promise<File> {
+    try {
+      await this.axios.delete(
+        `/api/${operationToken}/media_objects/${file.id}`
+      );
+      return file;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async deleteFolder(operationToken: string, folder: File): Promise<File> {
+    try {
+      await this.axios.delete(`/api/${operationToken}/folders/${folder.id}`);
+      return folder;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async renameFile(
+    operationToken: string,
+    file: File,
+    newName: string
+  ): Promise<boolean> {
+    try {
+      if (FileType.FOLDER === file['@type']) {
+        await this.axios.put(`/api/${operationToken}/folders/${file.id}`, {
+          name: newName,
+        });
+      } else {
+        await this.axios.put(
+          `/api/${operationToken}/media_objects/${file.id}`,
+          {
+            name: newName,
+          }
+        );
+      }
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async editFileAccess(
+    operationToken: string,
+    file: File,
+    users: string[]
+  ): Promise<boolean> {
+    try {
+      if (FileType.FOLDER === file['@type']) {
+        await this.axios.put(`/api/${operationToken}/folders/${file.id}`, {
+          users,
+        });
+      } else {
+        await this.axios.put(
+          `/api/${operationToken}/media_objects/${file.id}`,
+          {
+            users,
+          }
+        );
+      }
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async createUser(data: any): Promise<boolean> {
+    try {
+      const { email, password, operation } = data;
+      await this.axios.post('/api/users', {
+        email,
+        password,
+        operation,
+      });
+      return true;
     } catch (err) {
       throw new Error(err.response.statusText);
     }
@@ -132,10 +194,64 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
+  async updateUser(user: User, data: any): Promise<boolean> {
+    try {
+      const { email, password } = data;
+      await this.axios.put(`/api/users/${user.id}`, {
+        email,
+        password,
+      });
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async deleteUser(user: User): Promise<User> {
+    try {
+      await this.axios.delete(`/api/users/${user.id}`);
+      return user;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async createOperation(name: string): Promise<boolean> {
+    try {
+      await this.axios.post('/api/operations', { name });
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
   async getOperations(): Promise<Operation[]> {
     try {
       const response: any = await this.axios.get('/api/operations');
       return response.data['hydra:member'];
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async renameOperation(
+    operation: Operation,
+    newName: string
+  ): Promise<boolean> {
+    try {
+      await this.axios.put(`/api/operations/${operation.id}`, {
+        name: newName,
+      });
+      return true;
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async deleteOperation(operation: Operation): Promise<Operation> {
+    try {
+      await this.axios.delete(`/api/operations/${operation.id}`);
+      return operation;
     } catch (err) {
       throw new Error(err.response.statusText);
     }

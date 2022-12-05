@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Select } from 'antd';
+import { Form, FormInstance, Input, Select } from 'antd';
 import type { WithTranslation } from 'react-i18next';
+import { useKeyPressEvent } from 'react-use';
 
 import withTranslation from '../../hoc/withTranslation';
 
@@ -11,18 +12,23 @@ type Input = {
   value?: string;
   possibleValues?: any[];
   values?: any[];
+  multiple?: boolean;
 };
 
 interface ModalFormProps extends WithTranslation {
   inputs: Input[];
   onFormValueChange: (changedValues: any, allValues: any) => void;
+  submit: (form: FormInstance) => void;
 }
 
 const { Option } = Select;
 
-const ModalForm = ({ t, inputs, onFormValueChange }: ModalFormProps) => {
-  const [form] = Form.useForm();
-
+const ModalForm = ({
+  t,
+  inputs,
+  onFormValueChange,
+  submit,
+}: ModalFormProps) => {
   const validateMessages = {
     required: t('form.invalidInput'),
     types: {
@@ -30,8 +36,13 @@ const ModalForm = ({ t, inputs, onFormValueChange }: ModalFormProps) => {
     },
   };
 
+  const [form] = Form.useForm();
+
+  useKeyPressEvent('Enter', () => submit(form));
+
   return (
     <Form
+      form={form}
       className="modal-form"
       preserve={false}
       onValuesChange={onFormValueChange}
@@ -44,7 +55,7 @@ const ModalForm = ({ t, inputs, onFormValueChange }: ModalFormProps) => {
           component = (
             <Select
               placeholder={t(`form.${input.name}`)}
-              mode="multiple"
+              mode={input.multiple === false ? undefined : 'multiple'}
               allowClear
             >
               {input.possibleValues.map((value, key) => {

@@ -46,9 +46,29 @@ export default {
   notification: {
     success: {
       title: 'Success',
-      resourceDeleted: 'The resource has been successfully deleted.',
-      fileImported: 'The file has been successfully uploaded.',
-      fileDownloaded: 'The file has been successfully downloaded.',
+      fileImported: 'The file {{file}} has been successfully imported.',
+      fileDownloaded: 'The file {{file}} has been successfully downloaded.',
+      directoryCreated:
+        'The directory {{directory}} has been successfully created.',
+      fileUpdated: 'The file {{file}} has been successfully updated.',
+      folderUpdated:
+        'The directory {{directory}} has been successfully updated.',
+      fileDeleted: 'The file {{file}} has been successfully deleted.',
+      folderDeleted:
+        'The directory {{directory}} has been successfully deleted.',
+      userCreated: 'The user {{user}} has been successfully created',
+      userUpdated: 'The user {{user}} has been successfully updated.',
+      userDeleted: 'The user {{user}} has been successfully deleted.',
+      operationCreated:
+        'The operation {{operation}} has been successfully created.',
+      operationUpdated:
+        'The operation {{operation}} has been successfully updated.',
+      operationDeleted:
+        'The operation {{operation}} has been successfully deleted.',
+      folderAccessUpdated:
+        'The access to the directory {{directory}} has been successfully updated.',
+      fileAccessUpdated:
+        'The access to the file {{file}} has been successfully updated.',
     },
     error: {
       title: 'Error',

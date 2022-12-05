@@ -1,33 +1,21 @@
-import React, { FC } from 'react';
-import { Link } from 'react-router-dom';
-import { Button, Typography } from 'antd';
-import type { WithTranslation } from 'react-i18next';
+import { FC, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import withTranslation from '../../hoc/withTranslation';
+const HomePage: FC = () => {
+  const navigate = useNavigate();
 
-import './style.less';
+  useEffect(() => {
+    if (sessionStorage.getItem('token')) {
+      const operationToken = sessionStorage.getItem('operation_token');
+      if (operationToken) {
+        navigate(`/${operationToken}`);
+      }
+    } else {
+      navigate('/login');
+    }
+  }, []);
 
-const { Title, Paragraph } = Typography;
-
-const HomePage: FC<WithTranslation> = ({ t }) => {
-  const [appDesc, loginBtn] = sessionStorage.getItem('token')
-    ? [t('appDescriptionConnected'), null]
-    : [
-        t('appDescriptionDisconnected'),
-        <Button className="login" type="primary">
-          <Link to="/login">{t('menu.login')}</Link>
-        </Button>,
-      ];
-
-  return (
-    <div className="home-container">
-      <Typography>
-        <Title>{t('welcome')}</Title>
-        <Paragraph>{appDesc}</Paragraph>
-      </Typography>
-      {loginBtn}
-    </div>
-  );
+  return null;
 };
 
-export default withTranslation(HomePage);
+export default HomePage;

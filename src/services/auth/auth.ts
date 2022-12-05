@@ -44,12 +44,12 @@ const permissions: {
   [FileAction.EDIT_FILENAME]: [Role.CLIENT, Role.ADMIN],
   [FileAction.SHOW_FILE]: null,
   [FileAction.SHOW_QRCODE]: [Role.CLIENT, Role.ADMIN],
-  [OperationAction.CREATE_OPERATION]: [Role.CLIENT, Role.ADMIN],
-  [OperationAction.DELETE_OPERATION]: [Role.CLIENT, Role.ADMIN],
-  [OperationAction.MODIFY_OPERATION]: [Role.CLIENT, Role.ADMIN],
-  [UserAction.CREATE_USER]: [Role.ADMIN],
-  [UserAction.DELETE_USER]: [Role.ADMIN],
-  [UserAction.MODIFY_USER]: [Role.ADMIN],
+  [OperationAction.CREATE_OPERATION]: [Role.ADMIN],
+  [OperationAction.DELETE_OPERATION]: [Role.ADMIN],
+  [OperationAction.MODIFY_OPERATION]: [Role.ADMIN],
+  [UserAction.CREATE_USER]: [Role.CLIENT, Role.ADMIN],
+  [UserAction.DELETE_USER]: [Role.CLIENT, Role.ADMIN],
+  [UserAction.MODIFY_USER]: [Role.CLIENT, Role.ADMIN],
   [ModalAction.CLOSE_MODAL]: null,
 };
 

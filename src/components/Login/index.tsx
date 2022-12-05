@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Card, Form, Input, notification, Row } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -18,11 +18,14 @@ const LoginPage: FC = ({
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (sessionStorage.getItem('token')) {
+  if (sessionStorage.getItem('token')) {
+    const operationToken = sessionStorage.getItem('operation_token');
+    if (operationToken) {
+      navigate(`/${operationToken}`);
+    } else {
       navigate('/');
     }
-  }, []);
+  }
 
   const login = async (values: any) => {
     return await dataManager.login(values.email, values.password);
@@ -30,11 +33,16 @@ const LoginPage: FC = ({
 
   const { mutate, isLoading } = useMutation(login, {
     onSuccess: (data) => {
-      const { token, refreshToken, role } = data;
+      const { token, refreshToken, role, operationToken } = data;
       sessionStorage.setItem('token', token);
       sessionStorage.setItem('refresh_token', refreshToken);
       sessionStorage.setItem('role', role);
-      navigate(-1);
+      if (operationToken) {
+        sessionStorage.setItem('operation_token', operationToken);
+        navigate(`/${operationToken}`);
+      } else {
+        navigate(-1);
+      }
     },
     onError: (e) => {
       console.error(e);

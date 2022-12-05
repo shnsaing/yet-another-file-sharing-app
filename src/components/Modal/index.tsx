@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Modal } from 'antd';
+import { Modal } from 'antd';
 import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
@@ -18,8 +18,6 @@ const CustomModal = ({
   onCancel,
   children,
 }: CustomModalProps) => {
-  const [form] = Form.useForm();
-
   return (
     <Modal
       centered
