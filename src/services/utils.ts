@@ -61,3 +61,13 @@ export const showSuccesNotification = (message: string, t: TFunction) => {
     description: t(`notification.success.${message}`),
   });
 };
+
+export const getUrlWithQueryParams = (baseUrl: string, queryParams = {}) => {
+  const url = new URL(baseUrl);
+  if (Object.keys(queryParams).length > 0) {
+    Object.entries(queryParams).forEach(([key, val]) => {
+      url.searchParams.append(key, val ? val.toString() : '');
+    });
+  }
+  return url;
+};

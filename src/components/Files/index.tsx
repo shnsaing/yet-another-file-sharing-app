@@ -16,7 +16,13 @@ import {
 import type { ColumnsType } from 'antd/lib/table';
 import type { FilterValue } from 'antd/lib/table/interface';
 import { QRCodeSVG } from 'qrcode.react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import type { WithTranslation } from 'react-i18next';
 
 import TableView from '../TableView';
@@ -27,6 +33,7 @@ import withDataManager, {
 import withTranslation from '../../hoc/withTranslation';
 import {
   getFormattedDate,
+  getUrlWithQueryParams,
   showErrorNotification,
   showSuccesNotification,
 } from '../../services/utils';
@@ -54,6 +61,42 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
   const params = useParams();
   const operationToken = params.operationToken as string;
   const folderId = params.folderId;
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  if (
+    searchParams.has('download') &&
+    (!searchParams.has('id') || !searchParams.has('name'))
+  ) {
+    navigate(location.pathname);
+  }
+
+  const downloadFile = (file: FileType) => {
+    dataManager
+      .downloadFile(operationToken, file.id)
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        if (blob.type.indexOf('image') > -1) {
+          modalDispatch({
+            type: Action.SHOW_FILE,
+            imageFile: url,
+          });
+        } else {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
+          }, 100);
+          showSuccesNotification('fileDownloaded', t);
+        }
+      })
+      .catch(console.error);
+  };
 
   const [filteredInfo, setFilteredInfo] = useState<
     Record<string, FilterValue | null>
@@ -100,13 +143,26 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     isFetching,
     refetch,
   } = useQuery(['folders'], getFolders, {
+    onSuccess: (folders) => {
+      if (
+        searchParams.has('download') &&
+        searchParams.has('id') &&
+        searchParams.has('name')
+      ) {
+        const file = folders.data.find(
+          (f: FileType) =>
+            f['@type'] !== Type.FOLDER &&
+            f.id == searchParams.get('id') &&
+            f.name === searchParams.get('name')
+        );
+        downloadFile(file);
+      }
+    },
     onError: (e) => {
       console.error(e);
     },
     refetchOnWindowFocus: false,
   });
-
-  let location = useLocation();
 
   useEffect(() => {
     refetch();
@@ -181,7 +237,12 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         };
       case Action.SHOW_QRCODE:
         return {
-          content: <QRCodeSVG value={action.qrCodeValue} />,
+          content: (
+            <QRCodeSVG
+              onClick={() => window.open(action.qrCodeValue, '_blank')}
+              value={action.qrCodeValue}
+            />
+          ),
           showModal: true,
         };
       case Action.SHOW_FILE:
@@ -212,31 +273,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     showModal: false,
   });
 
-  const onFilenameClick = (file: FileType) => {
-    dataManager
-      .downloadFile(operationToken, file.id)
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        if (blob.type.indexOf('image') > -1) {
-          modalDispatch({
-            type: Action.SHOW_FILE,
-            imageFile: url,
-          });
-        } else {
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = file.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => {
-            window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
-          }, 100);
-        }
-      })
-      .catch(console.error);
-  };
-
   const getNameComponent = (record: FileType) => {
     if (record['@type'] === Type.FOLDER) {
       return (
@@ -245,7 +281,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         </Link>
       );
     }
-    return <a onClick={() => onFilenameClick(record)}>{record.name}</a>;
+    return <a onClick={() => downloadFile(record)}>{record.name}</a>;
   };
 
   const columns: ColumnsType<FileType> = [
@@ -342,9 +378,23 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           {permissions.indexOf(Action.SHOW_QRCODE) > -1 && (
             <QrcodeOutlined
               onClick={() => {
+                let url;
+                if (record['@type'] === Type.FOLDER) {
+                  url = `${window.location.origin}/${operationToken}/folder/${record.id}`;
+                } else {
+                  const { id, name } = record;
+                  url = getUrlWithQueryParams(
+                    `${window.location.origin}${location.pathname}`,
+                    {
+                      id,
+                      name,
+                      download: true,
+                    }
+                  );
+                }
                 modalDispatch({
                   type: Action.SHOW_QRCODE,
-                  qrCodeValue: `${window.location.origin}/${operationToken}/folder/${record.id}`,
+                  qrCodeValue: url,
                 });
               }}
             />

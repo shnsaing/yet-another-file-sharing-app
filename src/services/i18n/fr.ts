@@ -47,6 +47,7 @@ export default {
       title: 'Succès',
       resourceDeleted: 'La ressource a été correctement supprimée.',
       fileImported: 'Le fichier a été correctement téléversé.',
+      fileDownloaded: 'Le fichier a été correctement téléchargé.',
     },
     error: {
       title: 'Erreur',
