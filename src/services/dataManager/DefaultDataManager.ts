@@ -1,7 +1,9 @@
 import { AxiosInstance } from 'axios';
 
 import { DataManager } from './DataManager';
-import type File from '../../components/Files/File';
+import type File from '../../types/File';
+import type User from '../../types/User';
+import type Operation from '../../types/Operation';
 
 export class DefaultDataManager implements DataManager {
   private readonly axios: AxiosInstance;
@@ -19,6 +21,7 @@ export class DefaultDataManager implements DataManager {
       return {
         token: response.data.token,
         refreshToken: response.data.refresh_token,
+        role: response.data.role,
       };
     } catch (err) {
       throw new Error(err.response.statusText);
@@ -101,9 +104,38 @@ export class DefaultDataManager implements DataManager {
       const response = await this.axios.post('/api/folders', {
         name,
         parent,
-        operation: operationToken,
+        operation: `/api/operations/${operationToken}`,
       });
       console.log(response);
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async getUsers(): Promise<User[]> {
+    try {
+      const response: any = await this.axios.get('/api/users');
+      return response.data['hydra:member'];
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async getUsersByOperationToken(operationToken: string): Promise<User[]> {
+    try {
+      const response: any = await this.axios.get(
+        `/api/${operationToken}/users`
+      );
+      return response.data['hydra:member'];
+    } catch (err) {
+      throw new Error(err.response.statusText);
+    }
+  }
+
+  async getOperations(): Promise<Operation[]> {
+    try {
+      const response: any = await this.axios.get('/api/operations');
+      return response.data['hydra:member'];
     } catch (err) {
       throw new Error(err.response.statusText);
     }

@@ -1,7 +1,8 @@
-import React, { FC, useEffect, useState } from 'react';
-import { Button, Card, Divider, Form, Input, notification, Row } from 'antd';
-import { WithTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { FC, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Button, Card, Form, Input, notification, Row } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
 import withDataManager, {
@@ -14,7 +15,6 @@ const LoginPage: FC = ({
   dataManager,
   t,
 }: WithTranslation & WithDataManagerProps) => {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
@@ -24,26 +24,30 @@ const LoginPage: FC = ({
     }
   }, []);
 
-  const onFinish = async (values: any) => {
-    setLoading(true);
-    try {
-      const { token, refreshToken } = await dataManager.login(
-        values.email,
-        values.password
-      );
+  const login = async (values: any) => {
+    return await dataManager.login(values.email, values.password);
+  };
+
+  const { mutate, isLoading } = useMutation(login, {
+    onSuccess: (data) => {
+      const { token, refreshToken, role } = data;
       sessionStorage.setItem('token', token);
       sessionStorage.setItem('refresh_token', refreshToken);
+      sessionStorage.setItem('role', role);
       navigate(-1);
-    } catch (e) {
+    },
+    onError: (e) => {
       console.error(e);
       form.resetFields();
       notification.error({
         message: t('error'),
         description: t('login.errorMessage'),
       });
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onFinish = async (values: any) => {
+    mutate(values);
   };
 
   const validateMessages = {
@@ -74,13 +78,9 @@ const LoginPage: FC = ({
           </Form.Item>
 
           <Row justify="center">
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button type="primary" htmlType="submit" loading={isLoading}>
               {t('login.submit')}
             </Button>
-            <Divider />
-            <Link to="/forgot-password" className="active">
-              {t('forgotPassword')}
-            </Link>
           </Row>
         </Form>
       </Card>

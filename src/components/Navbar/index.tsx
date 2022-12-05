@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Drawer, Layout } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
-import { WithTranslation } from 'react-i18next';
+import { Drawer, Layout, Menu, MenuProps, MenuTheme } from 'antd';
+import { MenuMode } from 'rc-menu/lib/interface';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuOutlined } from '@ant-design/icons';
+import type { WithTranslation } from 'react-i18next';
 
 import withTranslation from '../../hoc/withTranslation';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 import './style.less';
 
@@ -12,34 +14,58 @@ const { Header } = Layout;
 
 const Navbar: React.FC = ({ t }: WithTranslation) => {
   const [openDrawer, setOpenDrawer] = useState(false);
+  const { pathname } = useLocation();
   const navigate = useNavigate();
-
-  const logout = () => {
-    sessionStorage.removeItem('token');
-    navigate(0); // refresh the page
-  };
+  const isMobile = useIsMobile();
 
   const getMenu = () => {
-    const menu: React.ReactElement[] = [];
-    let key = 1;
+    const menu: MenuProps['items'] = [];
+    menu.push({
+      label: t('home'),
+      key: '/',
+    });
     if (sessionStorage.getItem('token')) {
       menu.push(
-        <a key={key++} onClick={() => logout()}>
-          {t('menu.logout')}
-        </a>
+        {
+          label: 'Administration',
+          key: '/admin',
+        },
+        {
+          label: t('menu.logout'),
+          key: '/logout',
+        }
       );
     } else {
-      menu.push(
-        <Link key={key++} to="/login">
-          {t('menu.login')}
-        </Link>
-      );
+      menu.push({
+        label: t('menu.login'),
+        key: '/login',
+      });
     }
     return menu;
   };
 
-  const getDrawer = () => {
+  const getMenuComponent = (
+    mode = 'vertical',
+    theme: string | undefined = undefined
+  ) => {
     return (
+      <Menu
+        theme={theme as MenuTheme}
+        selectedKeys={[pathname]}
+        onClick={menuOnClick}
+        mode={mode as MenuMode}
+        items={getMenu()}
+      />
+    );
+  };
+
+  const menuOnClick: MenuProps['onClick'] = (e) => {
+    navigate(e.key);
+    setOpenDrawer(false);
+  };
+
+  const getDrawer = () => {
+    return isMobile ? (
       <Drawer
         open={openDrawer}
         placement="right"
@@ -49,22 +75,29 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
         drawerStyle={{ overflowX: 'hidden' }}
         width={260}
       >
-        {getMenu()}
+        {getMenuComponent()}
       </Drawer>
-    );
+    ) : null;
   };
 
-  return (
-    <Header>
-      <div className="logo" />
+  const getNavbar = () => {
+    return isMobile ? (
       <div className="hamburger-wrapper">
         <MenuOutlined
           className="hamburger"
           onClick={() => setOpenDrawer(true)}
         />
       </div>
+    ) : (
+      getMenuComponent('horizontal', 'dark')
+    );
+  };
+
+  return (
+    <Header>
+      <div className="logo" />
+      {getNavbar()}
       {getDrawer()}
-      {/* {getMenu()} */}
     </Header>
   );
 };

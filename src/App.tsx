@@ -1,10 +1,44 @@
-import React, { FC } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React, { FC, useEffect } from 'react';
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+  useNavigate,
+} from 'react-router-dom';
 
 import FilesPage from './components/Files';
 import HomePage from './components/Home';
 import DefaultLayout from './components/Layout';
 import LoginPage from './components/Login';
+import AdministrationPage from './components/Administration';
+import { Role } from './services/auth/auth';
+
+type ProtectedRouteProps = {
+  rolesAllowed: Role[];
+  children?: React.ReactNode;
+};
+
+const LogoutPage = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    sessionStorage.clear();
+    navigate('/');
+  }, []);
+  return null;
+};
+
+const ProtectedRoute = ({
+  rolesAllowed,
+  children,
+}: ProtectedRouteProps): JSX.Element => {
+  const role = sessionStorage.getItem('role');
+  if (role) {
+    if (rolesAllowed.find((allowedRole) => role === allowedRole)) {
+      return <React.Fragment>{children}</React.Fragment>;
+    }
+  }
+  return <Navigate to="/" replace={true} />;
+};
 
 const router = createBrowserRouter([
   {
@@ -17,10 +51,6 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: 'forgot-password',
-        element: <div>forgotpass</div>,
-      },
-      {
         path: ':operationToken',
         element: <FilesPage />,
       },
@@ -31,8 +61,21 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: 'admin',
+    element: (
+      <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+        <DefaultLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <AdministrationPage /> }],
+  },
+  {
     path: 'login',
     element: <LoginPage />,
+  },
+  {
+    path: 'logout',
+    element: <LogoutPage />,
   },
 ]);
 

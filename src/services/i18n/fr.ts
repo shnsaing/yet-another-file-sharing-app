@@ -33,6 +33,10 @@ export default {
   new: 'Nouveau',
   form: {
     directoryName: 'Nom du dossier',
+    invalidInput: 'Veuillez renseigner une valeur.',
+    roles: 'Rôle(s)',
+    users: 'Utilisateur(s)',
+    operationName: "Nom de l'opération",
   },
   confirm: {
     title: 'Êtes-vous sûr?',
@@ -44,11 +48,31 @@ export default {
       title: 'Succès',
       resourceDeleted: 'La ressource a été correctement supprimée.',
       fileImported: 'Le fichier a été correctement téléversé.',
+      fileDownloaded: 'Le fichier a été correctement téléchargé.',
     },
     error: {
       title: 'Erreur',
       unauthorized: "Vous n'êtes pas autorisé à effectuer cette action.",
       unknown: 'Une erreur est survenue, veuillez réessayer plus tard.',
     },
+  },
+  home: 'Accueil',
+  name: 'Nom',
+  createdAt: 'Créé le',
+  updatedAt: 'Mis à jour le',
+  user: {
+    roles: 'Rôles',
+    new: 'Nouvel utilisateur',
+  },
+  operation: {
+    new: 'Nouvelle opération',
+  },
+  welcome: 'Bienvenue sur Kiken.',
+  appDescriptionConnected: 'Veuillez scanner un QR code pour continuer.',
+  appDescriptionDisconnected:
+    'Veuillez scanner un QR code ou vous connectez pour continuer.',
+  admin: {
+    usersTab: 'Utilisateurs',
+    operationsTab: 'Opérations',
   },
 };

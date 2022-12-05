@@ -1,4 +1,4 @@
-import type File from '../../components/Files/File';
+import type File from '../../types/File';
 
 export interface DataManager {
   login(email: string, password: string): Promise<any>;
@@ -9,4 +9,7 @@ export interface DataManager {
   deleteFile(operationToken: string, file: File): Promise<any>;
   deleteFolder(operationToken: string, folder: File): Promise<any>;
   createDirectory(operationToken: string, data: any): Promise<any>;
+  getUsers(): Promise<any[]>;
+  getUsersByOperationToken(operationToken: string): Promise<any[]>;
+  getOperations(): Promise<any[]>;
 }
