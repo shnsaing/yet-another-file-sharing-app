@@ -3,6 +3,7 @@ import { AxiosInstance } from 'axios';
 import { DataManager } from './DataManager';
 import type File from '../../types/File';
 import type User from '../../types/User';
+import type Operation from '../../types/Operation';
 
 export class DefaultDataManager implements DataManager {
   private readonly axios: AxiosInstance;
@@ -131,7 +132,7 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  async getOperations(): Promise<any> {
+  async getOperations(): Promise<Operation[]> {
     try {
       const response: any = await this.axios.get('/api/operations');
       return response.data['hydra:member'];

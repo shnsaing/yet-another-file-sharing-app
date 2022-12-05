@@ -36,6 +36,7 @@ export default {
     invalidInput: 'Please input a value.',
     roles: 'Role(s)',
     users: 'User(s)',
+    operationName: 'Operation name',
   },
   confirm: {
     title: 'Are you sure?',

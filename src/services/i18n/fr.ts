@@ -36,6 +36,7 @@ export default {
     invalidInput: 'Veuillez renseigner une valeur.',
     roles: 'Rôle(s)',
     users: 'Utilisateur(s)',
+    operationName: "Nom de l'opération",
   },
   confirm: {
     title: 'Êtes-vous sûr?',

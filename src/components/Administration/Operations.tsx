@@ -1,6 +1,6 @@
 import React, { FC, useReducer, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { MenuProps } from 'antd';
+import { MenuProps, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/lib/table';
 import type { WithTranslation } from 'react-i18next';
 
@@ -9,13 +9,15 @@ import withDataManager, {
   WithDataManagerProps,
 } from '../../hoc/withDataManager';
 import withTranslation from '../../hoc/withTranslation';
+import { getFormattedDate } from '../../services/utils';
 import { ModalAction } from '../../services/auth/auth';
 import { OperationAction as Action } from '../../services/auth/auth';
-import type User from '../../types/User';
+import type Operation from '../../types/Operation';
 
 import '../../style.less';
+import ModalForm from '../Modal/ModalForm';
 
-interface OperationType extends User {
+interface OperationType extends Operation {
   key: React.Key;
 }
 
@@ -51,7 +53,12 @@ const OperationsPage: FC<
       case Action.CREATE_OPERATION:
         return {
           action: Action.CREATE_OPERATION,
-          content: null,
+          content: (
+            <ModalForm
+              inputs={[{ name: 'name' }]}
+              onFormValueChange={handleFormValues}
+            />
+          ),
           showModal: true,
         };
       case Action.MODIFY_OPERATION:
@@ -80,7 +87,37 @@ const OperationsPage: FC<
     showModal: false,
   });
 
-  const columns: ColumnsType<OperationType> = [];
+  const columns: ColumnsType<OperationType> = [
+    {
+      key: 'name',
+      title: t('name'),
+      dataIndex: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (value) => (
+        <Tooltip placement="bottomLeft" title={value}>
+          {value}
+        </Tooltip>
+      ),
+    },
+    {
+      key: 'createdAt',
+      title: t('createdAt'),
+      dataIndex: 'createdAt',
+      responsive: ['md'],
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: getFormattedDate,
+    },
+    {
+      key: 'updateAt',
+      title: t('createdAt'),
+      dataIndex: 'createdAt',
+      responsive: ['md'],
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: getFormattedDate,
+    },
+  ];
 
   const hideModal = () => {
     modalDispatch({
