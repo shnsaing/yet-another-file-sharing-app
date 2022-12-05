@@ -45,7 +45,6 @@ const ModalForm = ({ t, inputs, onFormValueChange }: ModalFormProps) => {
             <Select
               placeholder={t(`form.${input.name}`)}
               mode="multiple"
-              defaultValue={input.values}
               allowClear
             >
               {input.possibleValues.map((value, key) => {
@@ -70,7 +69,7 @@ const ModalForm = ({ t, inputs, onFormValueChange }: ModalFormProps) => {
             key={index}
             name={input.name}
             rules={[{ required: true, ...rules }]}
-            initialValue={input.value}
+            initialValue={input.possibleValues ? input.values : input.value}
           >
             {component}
           </Form.Item>
