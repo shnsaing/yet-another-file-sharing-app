@@ -44,6 +44,7 @@ import {
 } from '../../services/auth/auth';
 import { Type } from '../../types/File';
 import type File from '../../types/File';
+import type User from '../../types/User';
 
 import '../../style.less';
 
@@ -190,7 +191,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     setModalFormData(allValues);
   };
 
-  let [users, setUsers] = useState([]);
+  let [users, setUsers] = useState<any>([]);
   if (isAuthorized(Action.EDIT_ACCESS)) {
     useQuery(
       ['users'],
@@ -198,7 +199,13 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         return await dataManager.getUsersByOperationToken(operationToken);
       },
       {
-        onSuccess: setUsers,
+        onSuccess: (data: User[]) => {
+          const users = data.map((user: User) => ({
+            id: user['@id'],
+            label: user.email,
+          }));
+          setUsers(users);
+        },
         onError: console.error,
         refetchOnWindowFocus: false,
       }
@@ -308,7 +315,16 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           selectedFile: action.file,
           content: (
             <ModalForm
-              inputs={[{ name: 'users', possibleValues: users }]}
+              inputs={[
+                {
+                  name: 'users',
+                  possibleValues: users,
+                  values: action.file.users?.map((user: User) => ({
+                    id: user['@id'],
+                    label: user.email,
+                  })),
+                },
+              ]}
               onFormValueChange={handleFormValues}
               submit={modalOnOk}
             />

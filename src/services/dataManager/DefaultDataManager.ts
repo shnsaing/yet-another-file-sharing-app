@@ -5,6 +5,7 @@ import { Type as FileType } from '../../types/File';
 import type File from '../../types/File';
 import type User from '../../types/User';
 import type Operation from '../../types/Operation';
+import { Role } from '../auth/auth';
 
 export class DefaultDataManager implements DataManager {
   private readonly axios: AxiosInstance;
@@ -162,12 +163,16 @@ export class DefaultDataManager implements DataManager {
 
   async createUser(data: any): Promise<boolean> {
     try {
-      const { email, password, operation } = data;
-      await this.axios.post('/api/users', {
+      const { email, password, operation, role } = data;
+      let body: any = {
         email,
         password,
         operation,
-      });
+      };
+      if (role) {
+        body = { ...body, roles: [role] };
+      }
+      await this.axios.post('/api/users', body);
       return true;
     } catch (err) {
       throw new Error(err.response.statusText);
@@ -176,24 +181,24 @@ export class DefaultDataManager implements DataManager {
 
   async getUsers(): Promise<User[]> {
     try {
-      const response: any = await this.axios.get('/api/users');
-      return response.data['hydra:member'];
+      const { operation_token, role } = sessionStorage;
+      if (operation_token && role === Role.CLIENT) {
+        return this.getUsersByOperationToken(operation_token);
+      } else {
+        const response: any = await this.axios.get('/api/users');
+        return response.data['hydra:member'];
+      }
     } catch (err) {
       throw new Error(err.response.statusText);
     }
   }
 
-  async getUsersByOperationToken(
-    operationToken: string
-  ): Promise<{ id: string; label: string }[]> {
+  async getUsersByOperationToken(operationToken: string): Promise<User[]> {
     try {
       const response: any = await this.axios.get(
         `/api/${operationToken}/users`
       );
-      return response.data['hydra:member'].map((user: User) => ({
-        id: user['@id'],
-        label: user.email,
-      }));
+      return response.data['hydra:member'];
     } catch (err) {
       throw new Error(err.response.statusText);
     }
@@ -202,10 +207,16 @@ export class DefaultDataManager implements DataManager {
   async updateUser(user: User, data: any): Promise<boolean> {
     try {
       const { email, password } = data;
-      await this.axios.put(`/api/users/${user.id}`, {
+      const { operation_token, role } = sessionStorage;
+      const body = {
         email,
         password,
-      });
+      };
+      if (operation_token && role === Role.CLIENT) {
+        await this.axios.put(`/api/${operation_token}/users/${user.id}`, body);
+      } else {
+        await this.axios.put(`/api/users/${user.id}`, body);
+      }
       return true;
     } catch (err) {
       throw new Error(err.response.statusText);
@@ -214,7 +225,12 @@ export class DefaultDataManager implements DataManager {
 
   async deleteUser(user: User): Promise<User> {
     try {
-      await this.axios.delete(`/api/users/${user.id}`);
+      const { operation_token, role } = sessionStorage;
+      if (operation_token && role === Role.CLIENT) {
+        await this.axios.delete(`/api/${operation_token}/users/${user.id}`);
+      } else {
+        await this.axios.delete(`/api/users/${user.id}`);
+      }
       return user;
     } catch (err) {
       throw new Error(err.response.statusText);

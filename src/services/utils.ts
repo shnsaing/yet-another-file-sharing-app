@@ -3,6 +3,8 @@ import axios, { CreateAxiosDefaults } from 'axios';
 import jwtDecode, { JwtPayload } from 'jwt-decode';
 import { TFunction } from 'react-i18next';
 
+import { LogoutPage } from '../App';
+
 export const buildAxiosInstance = (config: CreateAxiosDefaults) => {
   const axiosClient = axios.create(config);
 
@@ -25,7 +27,7 @@ export const buildAxiosInstance = (config: CreateAxiosDefaults) => {
       if (token && refreshToken) {
         const decoded = jwtDecode<JwtPayload>(token);
         if (decoded.exp && decoded.exp <= new Date().getTime()) {
-          // Use refresh token
+          return LogoutPage;
         }
       }
       return Promise.reject(error);
