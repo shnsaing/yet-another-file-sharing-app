@@ -18,6 +18,8 @@ export default {
   },
   modal: {
     close: 'Close',
+    download: 'Download',
+    ok: 'Validate',
   },
   menu: {
     login: 'Login',
@@ -47,7 +49,6 @@ export default {
     success: {
       title: 'Success',
       fileImported: 'The file {{file}} has been successfully imported.',
-      fileDownloaded: 'The file {{file}} has been successfully downloaded.',
       directoryCreated:
         'The directory {{directory}} has been successfully created.',
       fileUpdated: 'The file {{file}} has been successfully updated.',

@@ -82,7 +82,6 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     setTimeout(() => {
       window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
     }, 100);
-    showSuccesNotification('fileDownloaded', t, { file: file.name });
   };
 
   const downloadFile = (file: FileType) => {
@@ -95,6 +94,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             type: Action.SHOW_FILE,
             imageFile: url,
             onOk: () => triggerFileDownload(file, url),
+            okText: t('modal.download'),
           });
         } else {
           triggerFileDownload(file, url);
@@ -349,6 +349,8 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
             />
           ),
           showModal: true,
+          onOk: action.onOk,
+          okText: action.okText,
         };
       case Action.SHOW_FILE:
         return {
@@ -363,6 +365,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           ),
           showModal: true,
           onOk: action.onOk,
+          okText: action.okText,
         };
       case ModalAction.CLOSE_MODAL:
       default:
@@ -372,6 +375,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           content: null,
           showModal: false,
           onOk: undefined,
+          okText: undefined,
         };
     }
   };
@@ -381,6 +385,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     content: null,
     showModal: false,
     onOk: undefined,
+    okText: undefined,
   });
 
   const getNameComponent = (record: FileType) => {
@@ -509,6 +514,8 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
                 modalDispatch({
                   type: Action.SHOW_QRCODE,
                   qrCodeValue: url,
+                  //onOk: action.onOk,
+                  okText: t('modal.download'),
                 });
               }}
             />
@@ -620,6 +627,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
       hideModalHandler={hideModal}
       showModal={modalState.showModal}
       modalContent={modalState.content}
+      okText={modalState.okText}
     />
   );
 };
