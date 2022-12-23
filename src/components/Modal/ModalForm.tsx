@@ -60,8 +60,8 @@ const ModalForm = ({
             >
               {input.possibleValues.map((value, key) => {
                 return (
-                  <Option key={key} value={value}>
-                    {value}
+                  <Option key={key} value={value.id}>
+                    {value.label}
                   </Option>
                 );
               })}

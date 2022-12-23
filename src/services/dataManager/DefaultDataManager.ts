@@ -183,12 +183,17 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  async getUsersByOperationToken(operationToken: string): Promise<User[]> {
+  async getUsersByOperationToken(
+    operationToken: string
+  ): Promise<{ id: string; label: string }[]> {
     try {
       const response: any = await this.axios.get(
         `/api/${operationToken}/users`
       );
-      return response.data['hydra:member'];
+      return response.data['hydra:member'].map((user: User) => ({
+        id: user['@id'],
+        label: user.email,
+      }));
     } catch (err) {
       throw new Error(err.response.statusText);
     }
