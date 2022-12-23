@@ -72,15 +72,15 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
     navigate(location.pathname);
   }
 
-  const triggerFileDownload = (file: FileType, url: string) => {
+  const triggerDownload = (filename: string, data: string) => {
     const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
+    a.href = data;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => {
-      window.URL.revokeObjectURL(url); // Delay revoking the ObjectURL for Firefox
+      window.URL.revokeObjectURL(data); // Delay revoking the ObjectURL for Firefox
     }, 100);
   };
 
@@ -93,11 +93,11 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           modalDispatch({
             type: Action.SHOW_FILE,
             imageFile: url,
-            onOk: () => triggerFileDownload(file, url),
+            onOk: () => triggerDownload(file.name, url),
             okText: t('modal.download'),
           });
         } else {
-          triggerFileDownload(file, url);
+          triggerDownload(file.name, url);
         }
       })
       .catch(console.error);
@@ -344,6 +344,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
         return {
           content: (
             <QRCodeSVG
+              id="qrcode"
               onClick={() => window.open(action.qrCodeValue, '_blank')}
               value={action.qrCodeValue}
             />
@@ -497,7 +498,7 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
           {permissions.indexOf(Action.SHOW_QRCODE) > -1 && (
             <QrcodeOutlined
               onClick={() => {
-                let url;
+                let url: string;
                 if (record['@type'] === Type.FOLDER) {
                   url = `${window.location.origin}/${operationToken}/folder/${record.id}`;
                 } else {
@@ -509,12 +510,28 @@ const FilesPage: FC<WithTranslation & WithDataManagerProps> = ({
                       name,
                       download: true,
                     }
-                  );
+                  ).toString();
                 }
                 modalDispatch({
                   type: Action.SHOW_QRCODE,
                   qrCodeValue: url,
-                  //onOk: action.onOk,
+                  onOk: () => {
+                    const node = document.getElementById('qrcode');
+                    if (node == null) {
+                      return;
+                    }
+                    const serializer = new XMLSerializer();
+                    const fileURI =
+                      'data:image/svg+xml;charset=utf-8,' +
+                      encodeURIComponent(
+                        '<?xml version="1.0" standalone="no"?>' +
+                          serializer.serializeToString(node)
+                      );
+                    triggerDownload(
+                      `qrcode-${record.name.split('.')[0]}.svg`,
+                      fileURI
+                    );
+                  },
                   okText: t('modal.download'),
                 });
               }}
