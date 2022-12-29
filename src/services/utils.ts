@@ -26,7 +26,8 @@ export const buildAxiosInstance = (config: CreateAxiosDefaults) => {
       const refreshToken = sessionStorage.getItem('refresh_token');
       if (token && refreshToken) {
         const decoded = jwtDecode<JwtPayload>(token);
-        if (decoded.exp && decoded.exp <= new Date().getTime()) {
+        const currTime = new Date().getTime() / 1000;
+        if (decoded.exp && decoded.exp <= currTime) {
           return LogoutPage;
         }
       }
