@@ -246,7 +246,7 @@ const UsersPage: FC<
             ? (operations as any[]).find((op) => op['@id'] === operationName)[
                 '@id'
               ]
-            : `/api/operations/${sessionStorage.getItem('operation_token')}`,
+            : sessionStorage.getItem('operation_token'),
       });
     },
     {

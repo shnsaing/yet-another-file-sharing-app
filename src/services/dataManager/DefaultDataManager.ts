@@ -163,16 +163,19 @@ export class DefaultDataManager implements DataManager {
 
   async createUser(data: any): Promise<boolean> {
     try {
-      const { email, password, operation, role } = data;
+      const { email, password, operation } = data;
       let body: any = {
         email,
         password,
-        operation,
       };
-      if (role) {
-        body = { ...body, roles: [role] };
+      const { role: userRole } = sessionStorage;
+      let req;
+      if (userRole === Role.ADMIN) {
+        body = { ...body, operation, roles: [Role.CLIENT] };
+        req = await this.axios.post('/api/users', body);
+      } else {
+        req = await this.axios.post(`/api/${operation}/users`, body);
       }
-      await this.axios.post('/api/users', body);
       return true;
     } catch (err) {
       throw new Error(err.response.statusText);
