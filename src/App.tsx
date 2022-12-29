@@ -18,7 +18,7 @@ type ProtectedRouteProps = {
   children?: React.ReactNode;
 };
 
-const LogoutPage = () => {
+export const LogoutPage = () => {
   const navigate = useNavigate();
   useEffect(() => {
     sessionStorage.clear();
@@ -67,15 +67,15 @@ const router = createBrowserRouter([
       { index: true, element: <AdministrationPage /> },
       {
         path: 'operations',
-        element: <AdministrationPage />,
+        element: (
+          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
+            <AdministrationPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'users',
-        element: (
-          <ProtectedRoute rolesAllowed={[Role.ADMIN]}>
-            <AdministrationPage selectedKey="users" />
-          </ProtectedRoute>
-        ),
+        element: <AdministrationPage selectedKey="users" />,
       },
     ],
   },

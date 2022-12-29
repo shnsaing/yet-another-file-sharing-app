@@ -20,6 +20,7 @@ interface TableViewProps extends WithTranslation {
   formData: any | null;
   setFormData: (data: any) => void;
   modalOnOkHandler: () => void;
+  okText?: string;
   hideModalHandler: () => void;
   showModal: boolean;
   modalContent: ReactNode;
@@ -81,6 +82,7 @@ const TableView: FC<TableViewProps> = (props) => {
       <Modal
         showModal={props.showModal}
         onOk={() => props.modalOnOkHandler()}
+        okText={props.okText}
         onCancel={props.hideModalHandler}
       >
         {props.modalContent}

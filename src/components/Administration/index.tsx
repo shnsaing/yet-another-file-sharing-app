@@ -17,7 +17,7 @@ import './style.less';
 
 const AdministrationPage = ({
   t,
-  selectedKey = 'operations',
+  selectedKey,
 }: WithTranslation & { selectedKey?: string }) => {
   const navigate = useNavigate();
 
@@ -61,7 +61,7 @@ const AdministrationPage = ({
     <div className="card-container">
       <Tabs
         type="card"
-        defaultActiveKey="operations"
+        defaultActiveKey={items[0].key}
         activeKey={selectedKey}
         items={items}
         onChange={(key) => navigate(`/admin/${key}`)}

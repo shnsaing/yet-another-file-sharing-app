@@ -19,6 +19,7 @@ import withTranslation from '../../hoc/withTranslation';
 import {
   isAuthorized,
   ModalAction,
+  Role,
   UserAction,
 } from '../../services/auth/auth';
 import {
@@ -56,11 +57,16 @@ const UsersPage: FC<
     refetchOnWindowFocus: false,
   });
 
+  const role = sessionStorage.getItem('role');
+
   const getOperations = async () => {
-    const ops = await dataManager.getOperations();
-    return ops.map((op, i) => {
-      return Object.assign(op, { key: i });
-    });
+    if (role === Role.ADMIN) {
+      const ops = await dataManager.getOperations();
+      return ops.map((op, i) => {
+        return Object.assign(op, { key: i });
+      });
+    }
+    return null;
   };
 
   const { data: operations } = useQuery(['operations'], getOperations, {
@@ -96,21 +102,24 @@ const UsersPage: FC<
   const modalReducer = (prevState: any, action: any) => {
     switch (action.type) {
       case Action.CREATE_USER:
+        const inputs: any[] = [{ name: 'email' }, { name: 'password' }];
+        if (role === Role.ADMIN) {
+          inputs.push({
+            name: 'operationName',
+            possibleValues: operations
+              ? operations.map((op) => ({
+                  id: op['@id'],
+                  label: op.name,
+                }))
+              : [],
+            multiple: false,
+          });
+        }
         return {
           action: Action.CREATE_USER,
           content: (
             <ModalForm
-              inputs={[
-                { name: 'email' },
-                { name: 'password' },
-                {
-                  name: 'operationName',
-                  possibleValues: operations
-                    ? operations.map((op) => op.name)
-                    : [],
-                  multiple: false,
-                },
-              ]}
+              inputs={inputs}
               onFormValueChange={handleFormValues}
               submit={modalOnOk}
             />
@@ -232,9 +241,12 @@ const UsersPage: FC<
       return dataManager.createUser({
         email,
         password,
-        operation: (operations as any[]).find(
-          (op) => op.name === operationName
-        )['@id'],
+        operation:
+          role === Role.ADMIN
+            ? (operations as any[]).find((op) => op['@id'] === operationName)[
+                '@id'
+              ]
+            : sessionStorage.getItem('operation_token'),
       });
     },
     {

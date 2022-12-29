@@ -54,26 +54,31 @@ const ModalForm = ({
         if (input.possibleValues) {
           component = (
             <Select
+              key={index}
               placeholder={t(`form.${input.name}`)}
               mode={input.multiple === false ? undefined : 'multiple'}
               allowClear
             >
               {input.possibleValues.map((value, key) => {
                 return (
-                  <Option key={key} value={value}>
-                    {value}
+                  <Option key={key} value={value.id}>
+                    {value.label}
                   </Option>
                 );
               })}
             </Select>
           );
         } else if (input.name === 'password') {
-          component = <Input.Password placeholder={t('password')} />;
+          component = (
+            <Input.Password key={index} placeholder={t('password')} />
+          );
         } else if (input.name === 'email') {
-          component = <Input placeholder={t('email.label')} />;
+          component = <Input key={index} placeholder={t('email.label')} />;
           rules.type = 'email';
         } else {
-          component = <Input placeholder={t(`form.${input.name}`)} />;
+          component = (
+            <Input key={index} placeholder={t(`form.${input.name}`)} />
+          );
         }
         return (
           <Form.Item

@@ -18,6 +18,8 @@ export default {
   },
   modal: {
     close: 'Fermer',
+    download: 'Télécharger',
+    ok: 'Valider',
   },
   menu: {
     login: 'Se connecter',
@@ -47,7 +49,6 @@ export default {
     success: {
       title: 'Succès',
       fileImported: 'Le fichier {{file}} a été correctement téléversé.',
-      fileDownloaded: 'Le fichier {{file}} a été correctement téléchargé.',
       directoryCreated: 'Le dossier {{directory}} a été créé avec succès.',
       fileUpdated: 'Le fichier {{file}} a été mis à jour avec succès',
       folderUpdated: 'Le dossier {{directory}} a été mis à jour avec succès',

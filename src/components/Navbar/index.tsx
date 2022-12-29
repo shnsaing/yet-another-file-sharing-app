@@ -36,7 +36,6 @@ const Navbar: React.FC = ({ t }: WithTranslation) => {
       const usAuth = Object.values(UserAction).find((action) =>
         isAuthorized(action)
       );
-      console.log(opAuth, usAuth, opAuth || usAuth);
       if (opAuth || usAuth) {
         menu.push({
           label: 'Administration',
